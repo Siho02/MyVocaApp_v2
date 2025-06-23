@@ -16,19 +16,26 @@ class HomeScreen(QWidget):
         layout.addWidget(title)
 
         # 주요 기능 버튼들
-        buttons = [
-            ("📥 CSV로 단어 등록", self.csv_register),
-            ("✏️ 단어 수동 등록", self.manual_register),
-            ("📚 단어 전체 보기", self.view_all),
-            ("🎯 단어 공부하러 가기", self.study),
-        ]
+        self.csv_button = QPushButton("📥 CSV로 단어 등록")
+        self.manual_button = QPushButton("✏️ 수동으로 단어 등록")
+        self.view_button = QPushButton("📚 등록한 단어 전체 보기")
+        self.study_button = QPushButton("🎯 단어 공부하러 가기")
 
-        for text, func in buttons:
-            btn = QPushButton(text)
-            btn.setFixedHeight(40)
-            btn.clicked.connect(func)
-            layout.addWidget(btn)
+        self.csv_button.setFixedHeight(40)
+        self.manual_button.setFixedHeight(40)
+        self.view_button.setFixedHeight(40)
+        self.study_button.setFixedHeight(40)
+
+        self.csv_button.clicked.connect(self.csv_register)
+        self.manual_button.clicked.connect(self.manual_register)
+        self.view_button.clicked.connect(self.view_all)
+        self.study_button.clicked.connect(self.study)
         
+        layout.addWidget(self.csv_button)
+        layout.addWidget(self.manual_button)
+        layout.addWidget(self.view_button)
+        layout.addWidget(self.study_button)
+
         layout.addStretch()
 
         # 하단 내비게이션

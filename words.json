@@ -1,0 +1,24 @@
+[
+  {
+    "word": "apple",
+    "meaning": [
+      "사과"
+    ],
+    "example": "Apple is fruit",
+    "created_at": "2025-06-23 12:43",
+    "review_stats": {
+      "eng_to_kor": {
+        "correct_cnt": 0,
+        "incorrect_cnt": 0,
+        "last_reviewed": null,
+        "next_review": 1750661006.727706
+      },
+      "kor_to_eng": {
+        "correct_cnt": 0,
+        "incorrect_cnt": 0,
+        "last_reviewed": null,
+        "next_review": 1750661006.727706
+      }
+    }
+  }
+]
