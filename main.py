@@ -7,6 +7,7 @@ from ui.register_manual import RegisterManualScreen
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
         self.setWindowTitle("My Voca App")
         self.setGeometry(100, 100, 400, 600)
 
@@ -15,7 +16,7 @@ class MainWindow(QMainWindow):
 
         # 화면 구성
         self.home_screen = HomeScreen()
-        self.register_screen = RegisterManualScreen()  # ← Step 2: 단어 등록 화면
+        self.register_screen = RegisterManualScreen(self.show_home_screen)  # ← Step 2: 단어 등록 화면
 
         self.stack.addWidget(self.home_screen)
         self.stack.addWidget(self.register_screen)
@@ -24,6 +25,9 @@ class MainWindow(QMainWindow):
         self.home_screen.manual_button.clicked.connect(
             lambda: self.stack.setCurrentWidget(self.register_screen)
         )
+
+    def show_home_screen(self):
+        self.stack.setCurrentWidget(self.home_screen)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

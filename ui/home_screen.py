@@ -4,9 +4,7 @@ from PyQt5.QtCore import Qt
 class HomeScreen(QWidget):
     def __init__(self):
         super().__init__()
-        self.init_ui()
     
-    def init_ui(self):
         layout = QVBoxLayout()
 
         #상단 제목 만들기
