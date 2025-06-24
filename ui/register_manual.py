@@ -43,57 +43,67 @@ class RegisterManualScreen(QWidget):
 
     def save_word(self):
         word = self.word_input.text().strip()
-        meanings = [line.strip() for line in self.meaning_input.toPlainText().splitlines() if line.strip()]
+        meaning_text = self.meaning_input.toPlainText().strip()
         example = self.example_input.toPlainText().strip()
 
-        if not word or not meanings:
+        if not word or not meaning_text:
             QMessageBox.warning(self, "입력 오류", "단어와 뜻을 모두 입력해주세요.")
             return
 
-        # 파일에 저장 
-        file_path = "data/words.json"
+        meanings = [m.strip() for m in meaning_text.splitlines() if m.strip()]
 
-        if not os.path.exists("data"):
-            os.makedirs("data")
+        json_path = "data/words.json"
+        if os.path.exists(json_path):
+            with open(json_path, "r", encoding="utf-8") as f:
+                existing_words = json.load(f)
+        else:
+            existing_words = []
 
-        try:
-            with open(file_path, "r", encoding='utf-8') as f:
-                words = json.load(f)
-        except FileNotFoundError:
-            words = []
+        existing_dict = {w['word']: w for w in existing_words}
+        message = ""
 
-        for w in words:
-            if w["word"] == word:
-                QMessageBox.warning(self, "중복 단어", f"이미 등록 된 단어입니다. : {word}")
-                return
-            
-        data = {
-            "word": word,
-            "meaning": meanings,
-            "example": example,
-            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
-            "review_stats": {
-                "eng_to_kor": {
-                    "correct_cnt": 0,
-                    "incorrect_cnt": 0,
-                    "last_reviewed": None,
-                    "next_review" :(datetime.now() + timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M")
-                },
-                "kor_to_eng": {
-                    "correct_cnt": 0,
-                    "incorrect_cnt": 0,
-                    "last_reviewed": None,
-                    "next_review" :(datetime.now() + timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M")
+        if word in existing_dict:
+            existing_meanings = set(existing_dict[word]['meaning'])
+            new_meanings = set(meanings)
+            added_meanings = new_meanings - existing_meanings
+
+            if added_meanings:
+                existing_dict[word]['meaning'].extend(list(added_meanings))
+                message = f"기존 단어 '{word}'에 뜻 {len(added_meanings)}개를 추가했습니다."
+            else:
+                message = f"단어 '{word}'는 이미 등록되어 있으며 새로운 뜻이 없습니다."
+        else:
+            data = {
+                "word": word,
+                "meaning": meanings,
+                "example": example,
+                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "review_stats": {
+                    "eng_to_kor": {
+                        "correct_cnt": 0,
+                        "incorrect_cnt": 0,
+                        "last_reviewed": None,
+                        "next_review" :(datetime.now() + timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M")
+                    },
+                    "kor_to_eng": {
+                        "correct_cnt": 0,
+                        "incorrect_cnt": 0,
+                        "last_reviewed": None,
+                        "next_review" :(datetime.now() + timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M")
+                    }
                 }
             }
-        }
-
-        # 저장
-        words.append(data)
-        with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(words, f, ensure_ascii=False, indent=2)
+            existing_words.append(data)
+            message = f"새로운 단어 '{word}'를 등록했습니다."
         
-        QMessageBox.information(self, "성공", f"'{word}' 단어가 저장되었습니다.")
+        
+        # 저장
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump(list(existing_dict.values()) + [
+            w for w in existing_words if w['word'] not in existing_dict
+        ], f, ensure_ascii=False, indent=2)
+        
+        QMessageBox.information(self, "등록 결과", message)
         
         self.word_input.clear()
         self.meaning_input.clear()

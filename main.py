@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QStackedWidget, QPushButt
 
 from ui.home_screen import HomeScreen
 from ui.register_manual import RegisterManualScreen
+from ui.register_csv import RegisterCSVScreen
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -17,15 +18,20 @@ class MainWindow(QMainWindow):
         # 화면 구성
         self.home_screen = HomeScreen()
         self.register_screen = RegisterManualScreen(self.show_home_screen)  # ← Step 2: 단어 등록 화면
-
+        self.csv_screen = RegisterCSVScreen(self.show_home_screen)
+        
         self.stack.addWidget(self.home_screen)
         self.stack.addWidget(self.register_screen)
+        self.stack.addWidget(self.csv_screen)
 
         # Step 2: 버튼 클릭 시 화면 전환 연결
         self.home_screen.manual_button.clicked.connect(
             lambda: self.stack.setCurrentWidget(self.register_screen)
         )
-
+        self.home_screen.csv_button.clicked.connect(
+            lambda: self.stack.setCurrentWidget(self.csv_screen)
+        )
+        
     def show_home_screen(self):
         self.stack.setCurrentWidget(self.home_screen)
 

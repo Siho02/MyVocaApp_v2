@@ -20,5 +20,50 @@
         "next_review": "2025-06-23 23:28"
       }
     }
+  },
+  {
+    "word": "book",
+    "meaning": [
+      "책"
+    ],
+    "example": "I read a book yesterday.",
+    "created_at": "2025-06-24 20:36",
+    "review_stats": {
+      "eng_to_kor": {
+        "correct_cnt": 0,
+        "incorrect_cnt": 0,
+        "last_reviewed": null,
+        "next_review": "2025-06-24 21:36"
+      },
+      "kor_to_eng": {
+        "correct_cnt": 0,
+        "incorrect_cnt": 0,
+        "last_reviewed": null,
+        "next_review": "2025-06-24 21:36"
+      }
+    }
+  },
+  {
+    "word": "computer",
+    "meaning": [
+      "컴퓨터",
+      "계산기"
+    ],
+    "example": "He bought a new computer.",
+    "created_at": "2025-06-24 20:36",
+    "review_stats": {
+      "eng_to_kor": {
+        "correct_cnt": 0,
+        "incorrect_cnt": 0,
+        "last_reviewed": null,
+        "next_review": "2025-06-24 21:36"
+      },
+      "kor_to_eng": {
+        "correct_cnt": 0,
+        "incorrect_cnt": 0,
+        "last_reviewed": null,
+        "next_review": "2025-06-24 21:36"
+      }
+    }
   }
 ]
