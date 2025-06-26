@@ -2,9 +2,15 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayo
 from PyQt5.QtCore import Qt 
 
 class HomeScreen(QWidget):
-    def __init__(self):
-        super().__init__()
-    
+    def __init__(self, switch_to_register_callback, switch_to_csv_callback, switch_to_wordlist_callback, switch_to_study_mode_callback):
+        super().__init__()  
+        self.switch_to_register_callback = switch_to_register_callback
+        self.switch_to_csv_callback = switch_to_csv_callback
+        self.switch_to_wordlist_callback = switch_to_wordlist_callback
+        self.switch_to_study_mode_callback = switch_to_study_mode_callback
+        self.init_ui()
+        
+    def init_ui(self):
         layout = QVBoxLayout()
 
         #상단 제목 만들기
@@ -14,25 +20,25 @@ class HomeScreen(QWidget):
         layout.addWidget(title)
 
         # 주요 기능 버튼들
-        self.csv_button = QPushButton("📥 CSV로 단어 등록")
-        self.manual_button = QPushButton("✏️ 수동으로 단어 등록")
-        self.view_button = QPushButton("📚 등록한 단어 전체 보기")
-        self.study_button = QPushButton("🎯 단어 공부하러 가기")
+        # csv 등록 
+        csv_button = QPushButton("📥 CSV로 단어 등록")
+        csv_button.clicked.connect(self.switch_to_csv_callback)
+        layout.addWidget(csv_button)
 
-        self.csv_button.setFixedHeight(40)
-        self.manual_button.setFixedHeight(40)
-        self.view_button.setFixedHeight(40)
-        self.study_button.setFixedHeight(40)
-
-        self.csv_button.clicked.connect(self.csv_register)
-        self.manual_button.clicked.connect(self.manual_register)
-        self.view_button.clicked.connect(self.view_all)
-        self.study_button.clicked.connect(self.study)
+        # 수동 등록
+        manual_button = QPushButton("✏️ 수동으로 단어 등록")
+        manual_button.clicked.connect(self.switch_to_register_callback)
+        layout.addWidget(manual_button)
         
-        layout.addWidget(self.csv_button)
-        layout.addWidget(self.manual_button)
-        layout.addWidget(self.view_button)
-        layout.addWidget(self.study_button)
+        # 등록 단어
+        view_button = QPushButton("📚 등록한 단어 전체 보기")
+        view_button.clicked.connect(self.switch_to_wordlist_callback)
+        layout.addWidget(view_button)
+
+        # 단어 공부하러가기
+        study_button = QPushButton("🎯 단어 공부하러 가기")
+        study_button.clicked.connect(self.switch_to_study_mode_callback)
+        layout.addWidget(study_button)
 
         layout.addStretch()
 
@@ -45,16 +51,3 @@ class HomeScreen(QWidget):
         layout.addLayout(nav_layout)
 
         self.setLayout(layout)
-    
-
-    def csv_register(self):
-        print("CSV 등록 화면으로 이동")
-
-    def manual_register(self):
-        print("수동 등록 화면으로 이동")
-
-    def view_all(self):
-        print("전체 단어 보기 화면으로 이동")
-
-    def study(self):
-        print("단어 공부 화면으로 이동")
