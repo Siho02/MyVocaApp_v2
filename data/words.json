@@ -4,42 +4,22 @@
     "meaning": [
       "사과"
     ],
-    "example": "Apple is fruit",
-    "created_at": "2025-06-23 20:28",
+    "example": "",
+    "created_at": "2025-07-08 20:54",
     "review_stats": {
       "eng_to_kor": {
         "correct_cnt": 0,
         "incorrect_cnt": 0,
+        "prob_mode": "objective",
         "last_reviewed": null,
-        "next_review": "2025-06-23 23:28"
+        "next_review": "2025-07-08 21:54"
       },
       "kor_to_eng": {
         "correct_cnt": 0,
         "incorrect_cnt": 0,
+        "prob_mode": "objective",
         "last_reviewed": null,
-        "next_review": "2025-06-23 23:28"
-      }
-    }
-  },
-  {
-    "word": "book",
-    "meaning": [
-      "책"
-    ],
-    "example": "I read a book yesterday.",
-    "created_at": "2025-06-24 20:36",
-    "review_stats": {
-      "eng_to_kor": {
-        "correct_cnt": 0,
-        "incorrect_cnt": 0,
-        "last_reviewed": null,
-        "next_review": "2025-06-24 21:36"
-      },
-      "kor_to_eng": {
-        "correct_cnt": 0,
-        "incorrect_cnt": 0,
-        "last_reviewed": null,
-        "next_review": "2025-06-24 21:36"
+        "next_review": "2025-07-08 21:54"
       }
     }
   },
@@ -49,19 +29,21 @@
       "고식물학"
     ],
     "example": "",
-    "created_at": "2025-06-25 19:47",
+    "created_at": "2025-07-08 20:55",
     "review_stats": {
       "eng_to_kor": {
         "correct_cnt": 0,
         "incorrect_cnt": 0,
+        "prob_mode": "objective",
         "last_reviewed": null,
-        "next_review": "2025-06-25 20:47"
+        "next_review": "2025-07-08 21:55"
       },
       "kor_to_eng": {
         "correct_cnt": 0,
         "incorrect_cnt": 0,
+        "prob_mode": "objective",
         "last_reviewed": null,
-        "next_review": "2025-06-25 20:47"
+        "next_review": "2025-07-08 21:55"
       }
     }
   },
@@ -71,19 +53,21 @@
       "철저한, 엄격한"
     ],
     "example": "",
-    "created_at": "2025-06-25 19:47",
+    "created_at": "2025-07-08 20:55",
     "review_stats": {
       "eng_to_kor": {
         "correct_cnt": 0,
         "incorrect_cnt": 0,
+        "prob_mode": "objective",
         "last_reviewed": null,
-        "next_review": "2025-06-25 20:47"
+        "next_review": "2025-07-08 21:55"
       },
       "kor_to_eng": {
         "correct_cnt": 0,
         "incorrect_cnt": 0,
+        "prob_mode": "objective",
         "last_reviewed": null,
-        "next_review": "2025-06-25 20:47"
+        "next_review": "2025-07-08 21:55"
       }
     }
   },
@@ -93,19 +77,21 @@
       "~을 발굴하다, ~을 출토하다, ~을 파다"
     ],
     "example": "",
-    "created_at": "2025-06-25 19:47",
+    "created_at": "2025-07-08 20:55",
     "review_stats": {
       "eng_to_kor": {
         "correct_cnt": 0,
         "incorrect_cnt": 0,
+        "prob_mode": "objective",
         "last_reviewed": null,
-        "next_review": "2025-06-25 20:47"
+        "next_review": "2025-07-08 21:55"
       },
       "kor_to_eng": {
         "correct_cnt": 0,
         "incorrect_cnt": 0,
+        "prob_mode": "objective",
         "last_reviewed": null,
-        "next_review": "2025-06-25 20:47"
+        "next_review": "2025-07-08 21:55"
       }
     }
   },
@@ -118,19 +104,21 @@
       "논쟁, ~을 반박하다, 이의를 제기하다"
     ],
     "example": "",
-    "created_at": "2025-06-25 19:47",
+    "created_at": "2025-07-08 20:55",
     "review_stats": {
       "eng_to_kor": {
         "correct_cnt": 0,
         "incorrect_cnt": 0,
+        "prob_mode": "objective",
         "last_reviewed": null,
-        "next_review": "2025-06-25 20:47"
+        "next_review": "2025-07-08 21:55"
       },
       "kor_to_eng": {
         "correct_cnt": 0,
         "incorrect_cnt": 0,
+        "prob_mode": "objective",
         "last_reviewed": null,
-        "next_review": "2025-06-25 20:47"
+        "next_review": "2025-07-08 21:55"
       }
     }
   },
@@ -140,19 +128,21 @@
       "(~에) 참여하기로 하다"
     ],
     "example": "",
-    "created_at": "2025-06-25 19:47",
+    "created_at": "2025-07-08 20:55",
     "review_stats": {
       "eng_to_kor": {
         "correct_cnt": 0,
         "incorrect_cnt": 0,
+        "prob_mode": "objective",
         "last_reviewed": null,
-        "next_review": "2025-06-25 20:47"
+        "next_review": "2025-07-08 21:55"
       },
       "kor_to_eng": {
         "correct_cnt": 0,
         "incorrect_cnt": 0,
+        "prob_mode": "objective",
         "last_reviewed": null,
-        "next_review": "2025-06-25 20:47"
+        "next_review": "2025-07-08 21:55"
       }
     }
   },
@@ -162,19 +152,21 @@
       "~을 완전히 이해하다, 동화되다, ~을 흡수하다"
     ],
     "example": "",
-    "created_at": "2025-06-25 19:47",
+    "created_at": "2025-07-08 20:55",
     "review_stats": {
       "eng_to_kor": {
         "correct_cnt": 0,
         "incorrect_cnt": 0,
+        "prob_mode": "objective",
         "last_reviewed": null,
-        "next_review": "2025-06-25 20:47"
+        "next_review": "2025-07-08 21:55"
       },
       "kor_to_eng": {
         "correct_cnt": 0,
         "incorrect_cnt": 0,
+        "prob_mode": "objective",
         "last_reviewed": null,
-        "next_review": "2025-06-25 20:47"
+        "next_review": "2025-07-08 21:55"
       }
     }
   },
@@ -184,19 +176,21 @@
       "거슬러 올라가다"
     ],
     "example": "",
-    "created_at": "2025-06-25 19:47",
+    "created_at": "2025-07-08 20:55",
     "review_stats": {
       "eng_to_kor": {
         "correct_cnt": 0,
         "incorrect_cnt": 0,
+        "prob_mode": "objective",
         "last_reviewed": null,
-        "next_review": "2025-06-25 20:47"
+        "next_review": "2025-07-08 21:55"
       },
       "kor_to_eng": {
         "correct_cnt": 0,
         "incorrect_cnt": 0,
+        "prob_mode": "objective",
         "last_reviewed": null,
-        "next_review": "2025-06-25 20:47"
+        "next_review": "2025-07-08 21:55"
       }
     }
   }

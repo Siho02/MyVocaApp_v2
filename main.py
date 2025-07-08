@@ -49,13 +49,13 @@ class MainWindow(QMainWindow):
     def switch_screen(self, screen):
         self.stack.setCurrentWidget(screen)
     
-    def start_study(self):
+    def start_study(self,mode):
         # 이전 study_screen이 이미 있었다면 제거 (중복 방지)
         if hasattr(self, 'study_screen') and self.study_screen is not None:
             self.stack.removeWidget(self.study_screen)
 
         # 새로운 StudyScreen 생성 (mode 전달)
-        self.study_screen = StudyScreen(mode, self.show_home_screen)
+        self.study_screen = StudyScreen(mode=mode, switch_to_home_callback=self.show_home_screen)
         self.stack.addWidget(self.study_screen)
         self.stack.setCurrentWidget(self.study_screen)
 

@@ -1,0 +1,16 @@
+{
+  "2025-07-08": {
+    "studied_word_count": 1,
+    "registered_word_count": 0,
+    "deleted_word_count": 0,
+    "correct_count": 0,
+    "incorrect_count": 0,
+    "study_minutes": 1,
+    "study_sessions": [
+      {
+        "start": "20:34",
+        "end": "20:34"
+      }
+    ]
+  }
+}

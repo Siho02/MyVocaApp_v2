@@ -63,12 +63,13 @@ class RegisterManualScreen(QWidget):
         message = ""
 
         if word in existing_dict:
-            existing_meanings = set(existing_dict[word]['meaning'])
+            entry = existing_dict[word]
+            original_meanings = set(entry.get("meaning", []))
             new_meanings = set(meanings)
-            added_meanings = new_meanings - existing_meanings
+            added_meanings = new_meanings - original_meanings
 
             if added_meanings:
-                existing_dict[word]['meaning'].extend(list(added_meanings))
+                entry['meaning'].extend(list(added_meanings))
                 message = f"기존 단어 '{word}'에 뜻 {len(added_meanings)}개를 추가했습니다."
             else:
                 message = f"단어 '{word}'는 이미 등록되어 있으며 새로운 뜻이 없습니다."
@@ -82,12 +83,14 @@ class RegisterManualScreen(QWidget):
                     "eng_to_kor": {
                         "correct_cnt": 0,
                         "incorrect_cnt": 0,
+                        "prob_mode" : "objective", 
                         "last_reviewed": None,
                         "next_review" :(datetime.now() + timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M")
                     },
                     "kor_to_eng": {
                         "correct_cnt": 0,
                         "incorrect_cnt": 0,
+                        "prob_mode" : "objective",
                         "last_reviewed": None,
                         "next_review" :(datetime.now() + timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M")
                     }
@@ -95,14 +98,14 @@ class RegisterManualScreen(QWidget):
             }
             existing_words.append(data)
             message = f"새로운 단어 '{word}'를 등록했습니다."
+            existing_dict[word] = data
         
         
         # 저장
+        updated_word_list = list(existing_dict.values())
         with open(json_path, "w", encoding="utf-8") as f:
-            json.dump(list(existing_dict.values()) + [
-            w for w in existing_words if w['word'] not in existing_dict
-        ], f, ensure_ascii=False, indent=2)
-        
+            json.dump(list(existing_dict.values()), f, ensure_ascii=False, indent=2) 
+
         QMessageBox.information(self, "등록 결과", message)
         
         self.word_input.clear()

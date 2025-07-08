@@ -51,12 +51,14 @@ class RegisterCSVScreen(QWidget):
                                     "eng_to_kor": {
                                         "correct_cnt": 0,
                                         "incorrect_cnt": 0,
+                                        "prob_mode" : "objective", 
                                         "last_reviewed": None,
                                         "next_review" :(datetime.now() + timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M")
                                     },
                                     "kor_to_eng": {
                                         "correct_cnt": 0,
                                         "incorrect_cnt": 0,
+                                        "prob_mode" : "objective",
                                         "last_reviewed": None,
                                         "next_review" :(datetime.now() + timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M")
                                     }
