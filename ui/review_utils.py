@@ -7,7 +7,7 @@ def update_study_log(mode, correct, incorrect, start_time, end_time):
     log_path = "data/study_log.json"
     today = datetime.now().strftime("%Y-%m-%d")
 
-    if not os.path.exists(log_path):
+    if os.path.exists(log_path):
         with open(log_path, 'r', encoding='utf-8') as f:
             try:
                 log_data = json.load(f)
