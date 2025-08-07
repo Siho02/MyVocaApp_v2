@@ -56,6 +56,8 @@ class StudyScreen(QWidget):
 
     def next_question(self):
         if not self.word_list:
+            self.clear_layout()
+            self.label_question.hide()
             QMessageBox.information(self, "완료", "복습할 단어가 없습니다.")
             self.finish_study_and_return_home()
             return
@@ -147,7 +149,7 @@ class StudyScreen(QWidget):
         self.process_answer(is_correct)
 
     def process_answer(self, is_correct):
-        if not self.current_word or not self.word_list:
+        if not self.current_word or self.current_word not in self.word_list:
             return 
         
         stats = self.current_word['review_stats'][self.mode]
@@ -167,7 +169,7 @@ class StudyScreen(QWidget):
                              incorrect=1, 
                              start_time=self.start_time, 
                              end_time=datetime.now().strftime("%H:%M"))
-            
+        
         now = datetime.now()
         stats['last_reviewed'] = now.strftime("%Y-%m-%d %H:%M")
         after_min = calculate_after_min(stats['correct_cnt'], stats['incorrect_cnt'])
@@ -199,7 +201,7 @@ class StudyScreen(QWidget):
         if os.path.exists(log_path):
             with open(log_path, "r", encoding="utf-8") as f:
                 log_data = json.load(f)
-            today = datetime.now().strftime("%Y=%m=%d")
+            today = datetime.now().strftime("%Y-%m-%d")
             if today in log_data:
                 log_data[today]['studied_word_count'] += len(self.session_reviewed)
             with open(log_path, "w", encoding="utf-8") as f:

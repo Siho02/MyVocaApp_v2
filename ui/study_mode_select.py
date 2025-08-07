@@ -23,9 +23,9 @@ class StudyModeSelectScreen(QWidget):
         kor_to_eng_button.clicked.connect(lambda: self.switch_to_study("kor_to_eng"))
         layout.addWidget(kor_to_eng_button)
 
-        # 홈으로 돌아가기 버튼
+        '''# 홈으로 돌아가기 버튼
         home_button = QPushButton("🏠 홈으로")
         home_button.clicked.connect(self.switch_to_home)
         layout.addWidget(home_button)
-
+        '''
         self.setLayout(layout)

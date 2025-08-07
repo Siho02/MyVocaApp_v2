@@ -8,11 +8,11 @@
     "created_at": "2025-07-08 20:54",
     "review_stats": {
       "eng_to_kor": {
-        "correct_cnt": 3,
+        "correct_cnt": 4,
         "incorrect_cnt": 0,
         "prob_mode": "objective",
-        "last_reviewed": "2025-08-06 11:17",
-        "next_review": "2025-08-06 20:17"
+        "last_reviewed": "2025-08-07 15:09",
+        "next_review": "2025-08-08 01:35"
       },
       "kor_to_eng": {
         "correct_cnt": 2,
@@ -32,11 +32,11 @@
     "created_at": "2025-07-08 20:55",
     "review_stats": {
       "eng_to_kor": {
-        "correct_cnt": 3,
+        "correct_cnt": 4,
         "incorrect_cnt": 0,
         "prob_mode": "objective",
-        "last_reviewed": "2025-08-06 11:17",
-        "next_review": "2025-08-06 20:17"
+        "last_reviewed": "2025-08-07 15:10",
+        "next_review": "2025-08-08 01:36"
       },
       "kor_to_eng": {
         "correct_cnt": 1,
@@ -56,11 +56,11 @@
     "created_at": "2025-07-08 20:55",
     "review_stats": {
       "eng_to_kor": {
-        "correct_cnt": 1,
+        "correct_cnt": 2,
         "incorrect_cnt": 1,
         "prob_mode": "objective",
-        "last_reviewed": "2025-08-06 11:17",
-        "next_review": "2025-08-06 16:02"
+        "last_reviewed": "2025-08-07 15:09",
+        "next_review": "2025-08-07 22:08"
       },
       "kor_to_eng": {
         "correct_cnt": 2,
@@ -80,11 +80,11 @@
     "created_at": "2025-07-08 20:55",
     "review_stats": {
       "eng_to_kor": {
-        "correct_cnt": 2,
+        "correct_cnt": 3,
         "incorrect_cnt": 1,
         "prob_mode": "objective",
-        "last_reviewed": "2025-08-06 11:17",
-        "next_review": "2025-08-06 18:16"
+        "last_reviewed": "2025-08-07 15:09",
+        "next_review": "2025-08-07 23:51"
       },
       "kor_to_eng": {
         "correct_cnt": 2,
@@ -107,18 +107,18 @@
     "created_at": "2025-07-08 20:55",
     "review_stats": {
       "eng_to_kor": {
+        "correct_cnt": 4,
+        "incorrect_cnt": 0,
+        "prob_mode": "objective",
+        "last_reviewed": "2025-08-07 15:09",
+        "next_review": "2025-08-08 01:35"
+      },
+      "kor_to_eng": {
         "correct_cnt": 3,
         "incorrect_cnt": 0,
         "prob_mode": "objective",
-        "last_reviewed": "2025-08-06 11:17",
-        "next_review": "2025-08-06 20:17"
-      },
-      "kor_to_eng": {
-        "correct_cnt": 2,
-        "incorrect_cnt": 0,
-        "prob_mode": "objective",
-        "last_reviewed": "2025-08-06 11:11",
-        "next_review": "2025-08-06 18:18"
+        "last_reviewed": "2025-08-07 16:29",
+        "next_review": "2025-08-08 01:29"
       }
     }
   },
@@ -131,11 +131,11 @@
     "created_at": "2025-07-08 20:55",
     "review_stats": {
       "eng_to_kor": {
-        "correct_cnt": 2,
+        "correct_cnt": 3,
         "incorrect_cnt": 1,
         "prob_mode": "objective",
-        "last_reviewed": "2025-08-06 11:17",
-        "next_review": "2025-08-06 18:16"
+        "last_reviewed": "2025-08-07 15:10",
+        "next_review": "2025-08-07 23:52"
       },
       "kor_to_eng": {
         "correct_cnt": 2,
@@ -155,11 +155,11 @@
     "created_at": "2025-07-08 20:55",
     "review_stats": {
       "eng_to_kor": {
-        "correct_cnt": 1,
+        "correct_cnt": 2,
         "incorrect_cnt": 2,
         "prob_mode": "objective",
-        "last_reviewed": "2025-08-06 11:17",
-        "next_review": "2025-08-06 16:17"
+        "last_reviewed": "2025-08-07 15:09",
+        "next_review": "2025-08-07 22:06"
       },
       "kor_to_eng": {
         "correct_cnt": 2,
@@ -179,18 +179,18 @@
     "created_at": "2025-07-08 20:55",
     "review_stats": {
       "eng_to_kor": {
+        "correct_cnt": 4,
+        "incorrect_cnt": 0,
+        "prob_mode": "objective",
+        "last_reviewed": "2025-08-07 15:09",
+        "next_review": "2025-08-08 01:35"
+      },
+      "kor_to_eng": {
         "correct_cnt": 3,
         "incorrect_cnt": 0,
         "prob_mode": "objective",
-        "last_reviewed": "2025-08-06 10:24",
-        "next_review": "2025-08-06 19:24"
-      },
-      "kor_to_eng": {
-        "correct_cnt": 2,
-        "incorrect_cnt": 0,
-        "prob_mode": "objective",
-        "last_reviewed": "2025-08-06 11:11",
-        "next_review": "2025-08-06 18:18"
+        "last_reviewed": "2025-08-07 16:29",
+        "next_review": "2025-08-08 01:29"
       }
     }
   },
@@ -203,11 +203,11 @@
     "created_at": "2025-08-06 14:07",
     "review_stats": {
       "eng_to_kor": {
-        "correct_cnt": 1,
+        "correct_cnt": 2,
         "incorrect_cnt": 0,
         "prob_mode": "objective",
-        "last_reviewed": "2025-08-06 14:08",
-        "next_review": "2025-08-06 18:38"
+        "last_reviewed": "2025-08-07 15:09",
+        "next_review": "2025-08-07 22:16"
       },
       "kor_to_eng": {
         "correct_cnt": 1,
@@ -227,11 +227,11 @@
     "created_at": "2025-08-06 14:07",
     "review_stats": {
       "eng_to_kor": {
-        "correct_cnt": 1,
+        "correct_cnt": 2,
         "incorrect_cnt": 0,
         "prob_mode": "objective",
-        "last_reviewed": "2025-08-06 14:13",
-        "next_review": "2025-08-06 18:43"
+        "last_reviewed": "2025-08-07 15:09",
+        "next_review": "2025-08-07 22:16"
       },
       "kor_to_eng": {
         "correct_cnt": 1,

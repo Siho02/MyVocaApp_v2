@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QStackedWidget
+from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow, QStackedWidget, QVBoxLayout, QHBoxLayout, QPushButton
 
 from ui.home_screen import HomeScreen
 from ui.register_manual import RegisterManualScreen
@@ -15,9 +15,18 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("My Voca App")
         self.setGeometry(100, 100, 400, 600)
 
-        self.stack = QStackedWidget()
-        self.setCentralWidget(self.stack)
+        #total layout
+        
+        main_layout = QVBoxLayout()
+        #self.setLayout(main_layout)
 
+        central_widget = QWidget()
+        central_widget.setLayout(main_layout)
+        self.setCentralWidget(central_widget)
+        
+        self.stack = QStackedWidget()
+        main_layout.addWidget(self.stack)
+        
         # 화면 생성
         self.register_screen = RegisterManualScreen(self.show_home_screen)
         self.csv_screen = RegisterCSVScreen(self.show_home_screen)
@@ -40,6 +49,21 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.csv_screen)
         self.stack.addWidget(self.word_list_screen)
         self.stack.addWidget(self.study_mode_select_screen)
+
+        nav_bar = QHBoxLayout()
+        btn_home = QPushButton("🏠 홈")
+        btn_stats = QPushButton("📊 통계")
+        btn_settings = QPushButton("⚙️ 설정")
+
+        btn_home.clicked.connect(lambda : self.switch_screen(self.home_screen))
+        #btn_stats.clicked.connect(lambda: )
+        #btn_settings.clicked.connect(lambda: )
+
+        nav_bar.addWidget(btn_home)
+        nav_bar.addWidget(btn_stats)
+        nav_bar.addWidget(btn_settings)
+
+        main_layout.addLayout(nav_bar)
 
         self.show()
 

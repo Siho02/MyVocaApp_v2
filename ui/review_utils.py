@@ -28,7 +28,7 @@ def update_study_log(mode, correct, incorrect, start_time, end_time):
             "study_sessions": []
         }
 
-    log_data[today]["studied_word_count"] += 1
+    #log_data[today]["studied_word_count"] += 1
     log_data[today]["correct_count"] += correct
     log_data[today]["incorrect_count"] += incorrect
 

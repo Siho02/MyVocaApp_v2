@@ -42,6 +42,8 @@ class HomeScreen(QWidget):
 
         layout.addStretch()
 
+
+        '''
         # 하단 내비게이션
         nav_layout = QHBoxLayout()
         for name in ["🏠 홈", "📊 통계", "⚙️ 설정"]:
@@ -49,5 +51,5 @@ class HomeScreen(QWidget):
             nav_btn.setStyleSheet("background-color: lightgray;")
             nav_layout.addWidget(nav_btn)
         layout.addLayout(nav_layout)
-
+        '''
         self.setLayout(layout)
