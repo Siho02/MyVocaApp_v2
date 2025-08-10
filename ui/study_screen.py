@@ -11,8 +11,12 @@ class StudyScreen(QWidget):
         self.quiz_word = None
         self.word_list = []
         self.all_words = []
+        self.session_started = False 
         self.session_reviewed = []
-        self.start_time = datetime.now().strftime("%H:%M")
+        self.start_time = None #datetime.now().strftime("%H:%M")
+        self.total_correct = 0
+        self.total_incorrect = 0
+        self.review_words = set() 
 
         self.init_ui()
         self.load_words()
@@ -61,6 +65,10 @@ class StudyScreen(QWidget):
             QMessageBox.information(self, "완료", "복습할 단어가 없습니다.")
             self.finish_study_and_return_home()
             return
+
+        if not self.session_started:
+            self.session_started = True
+            self.start_time = datetime.now().strftime("%H:%M")
 
         self.clear_layout()
         self.current_word = random.choice(self.word_list)
@@ -155,21 +163,11 @@ class StudyScreen(QWidget):
         stats = self.current_word['review_stats'][self.mode]
         if is_correct:
             QMessageBox.information(self, "정답", "정답입니다!")
-            stats['correct_cnt'] += 1
-            update_study_log("study", 
-                             correct=1, 
-                             incorrect=0, 
-                             start_time=self.start_time, 
-                             end_time=datetime.now().strftime("%H:%M"))
+            self.total_correct += 1
         else:
             QMessageBox.information(self, "오답", "오답입니다!")
-            stats['incorrect_cnt'] += 1
-            update_study_log("study", 
-                             correct=0, 
-                             incorrect=1, 
-                             start_time=self.start_time, 
-                             end_time=datetime.now().strftime("%H:%M"))
-        
+            self.total_incorrect += 1
+
         now = datetime.now()
         stats['last_reviewed'] = now.strftime("%Y-%m-%d %H:%M")
         after_min = calculate_after_min(stats['correct_cnt'], stats['incorrect_cnt'])
@@ -190,23 +188,45 @@ class StudyScreen(QWidget):
         self.next_question()
 
     def finish_study_and_return_home(self):
+        # ✅ 세션이 실제로 시작되지 않았거나/아무것도 풀지 않았다면 기록하지 않음
+        if not self.session_started or (self.total_correct + self.total_incorrect == 0 and len(self.reviewed_words) == 0):
+            self.switch_to_home_callback()
+            return
+
         end_time = datetime.now().strftime("%H:%M")
+
         update_study_log("study", 
-                         correct=0, 
-                         incorrect=0, 
+                         correct= self.total_correct, 
+                         incorrect= self.total_incorrect, 
                          start_time = self.start_time, 
                          end_time = end_time)
 
         log_path = "data/study_log.json"
-        if os.path.exists(log_path):
-            with open(log_path, "r", encoding="utf-8") as f:
-                log_data = json.load(f)
+
+        try:
+            if os.path.exists(log_path):
+                with open(log_path, "r", encoding="utf-8") as f:
+                    log_data = json.load(f)
+            else:
+                log_data = {}
+
             today = datetime.now().strftime("%Y-%m-%d")
             if today in log_data:
-                log_data[today]['studied_word_count'] += len(self.session_reviewed)
+                log_data[today] = {
+                "studied_word_count": 0,
+                "registered_word_count": 0,
+                "deleted_word_count": 0,
+                "correct_count": 0,
+                "incorrect_count": 0,
+                "study_minutes": 0,
+                "study_sessions": []
+                }
+            log_data[today]['studied_word_count'] += len(self.session_reviewed)
+            
             with open(log_path, "w", encoding="utf-8") as f:
                 json.dump(log_data, f, ensure_ascii=False, indent=2)
-
+        except Exception as e:
+            print(f"[WARN] study_log update failed : {e}")
         self.switch_to_home_callback()
 
     def clear_layout(self):
