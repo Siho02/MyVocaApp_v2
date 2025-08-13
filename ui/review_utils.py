@@ -39,7 +39,7 @@ def update_study_log(mode, correct, incorrect, start_time, end_time):
         minutes = max(1, int((end_dt - start_dt).total_seconds() / 60))  # 최소 1분
     except Exception as e:
         print(f"시간 파싱 오류 : {e}")
-        minutes += 1
+        minutes = 1
         
     log_data[today]["study_minutes"] += minutes
     log_data[today]["study_sessions"].append({

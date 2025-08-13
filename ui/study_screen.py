@@ -8,16 +8,17 @@ class StudyScreen(QWidget):
         super().__init__()
         self.switch_to_home_callback = switch_to_home_callback
         self.mode = mode
-        self.quiz_word = None
+
+        # session and state
         self.word_list = []
         self.all_words = []
-        self.session_started = False 
-        self.session_reviewed = []
-        self.start_time = None #datetime.now().strftime("%H:%M")
+        self.session_started = False
+        self.start_time = None 
         self.total_correct = 0
         self.total_incorrect = 0
-        self.review_words = set() 
-
+        self.reviewed_words = set()
+        self.current_word = None
+        
         self.init_ui()
         self.load_words()
         self.next_question()
@@ -29,6 +30,7 @@ class StudyScreen(QWidget):
         self.answer_input = QLineEdit()
         self.submit_button = QPushButton('제출')
         self.submit_button.clicked.connect(self.check_subjective_answer)
+        
         self.home_button = QPushButton("홈으로")
         self.home_button.clicked.connect(self.finish_study_and_return_home)
 
@@ -36,17 +38,14 @@ class StudyScreen(QWidget):
         self.layout.addWidget(self.answer_input)
         self.layout.addWidget(self.submit_button)
         self.layout.addWidget(self.home_button)
-
         self.setLayout(self.layout)
 
     def load_words(self):
         file_path = 'data/words.json'
         if os.path.exists(file_path):
             with open(file_path, encoding='utf-8') as f:
-                try:
-                    all_words = json.load(f)
-                except json.JSONDecodeError:
-                    all_words = []
+                try: all_words = json.load(f)
+                except json.JSONDecodeError: all_words = []
         else:
             all_words = []
 
@@ -59,6 +58,7 @@ class StudyScreen(QWidget):
         self.all_words = all_words
 
     def next_question(self):
+        #no word to review
         if not self.word_list:
             self.clear_layout()
             self.label_question.hide()
@@ -69,6 +69,7 @@ class StudyScreen(QWidget):
         if not self.session_started:
             self.session_started = True
             self.start_time = datetime.now().strftime("%H:%M")
+            #self.label_question.show()
 
         self.clear_layout()
         self.current_word = random.choice(self.word_list)
@@ -152,7 +153,10 @@ class StudyScreen(QWidget):
 
     def check_subjective_answer(self):
         user_answer = self.answer_input.text().strip().replace(" ", "")
-        correct_answers = [m.replace(" ", "") for m in self.current_word['meaning']] if self.mode == 'eng_to_kor' else [self.current_word['word'].replace(" ", "")]
+        if self.mode == 'eng_to_kor':
+            correct_answers = [m.replace(" ", "") for m in self.current_word['meaning']] if self.mode == 'eng_to_kor' else [self.current_word['word'].replace(" ", "")]
+        else:
+            correct_answers = [self.current_word['word'].replace(" ", "")]
         is_correct = user_answer in correct_answers
         self.process_answer(is_correct)
 
@@ -161,19 +165,23 @@ class StudyScreen(QWidget):
             return 
         
         stats = self.current_word['review_stats'][self.mode]
+
         if is_correct:
             QMessageBox.information(self, "정답", "정답입니다!")
             self.total_correct += 1
+            stats['correct_cnt'] += 1
+        
         else:
             QMessageBox.information(self, "오답", "오답입니다!")
             self.total_incorrect += 1
+            stats['incorrect_cnt'] += 1
 
+        self.reviewed_words.add(self.current_word['word'])
+        
         now = datetime.now()
         stats['last_reviewed'] = now.strftime("%Y-%m-%d %H:%M")
         after_min = calculate_after_min(stats['correct_cnt'], stats['incorrect_cnt'])
         stats['next_review'] = (now + timedelta(minutes=after_min)).strftime('%Y-%m-%d %H:%M')
-
-        self.session_reviewed.append(self.current_word)
 
         for i, w in enumerate(self.all_words):
             if w['word'] == self.current_word['word']:
@@ -184,17 +192,18 @@ class StudyScreen(QWidget):
             json.dump(self.all_words, f, ensure_ascii=False, indent=2)
 
         self.word_list.remove(self.current_word)
-        self.last_question_time = datetime.now().strftime("%H:%M")
+        self.current_word = None
+        #self.last_question_time = datetime.now().strftime("%H:%M")
         self.next_question()
 
     def finish_study_and_return_home(self):
-        # ✅ 세션이 실제로 시작되지 않았거나/아무것도 풀지 않았다면 기록하지 않음
-        if not self.session_started or (self.total_correct + self.total_incorrect == 0 and len(self.reviewed_words) == 0):
+        # ✅ 세션이 시작되지 않는 경우 기록하지 않음
+        if not self.session_started:
             self.switch_to_home_callback()
             return
 
         end_time = datetime.now().strftime("%H:%M")
-
+        
         update_study_log("study", 
                          correct= self.total_correct, 
                          incorrect= self.total_incorrect, 
@@ -202,7 +211,6 @@ class StudyScreen(QWidget):
                          end_time = end_time)
 
         log_path = "data/study_log.json"
-
         try:
             if os.path.exists(log_path):
                 with open(log_path, "r", encoding="utf-8") as f:
@@ -211,7 +219,7 @@ class StudyScreen(QWidget):
                 log_data = {}
 
             today = datetime.now().strftime("%Y-%m-%d")
-            if today in log_data:
+            if today not in log_data:
                 log_data[today] = {
                 "studied_word_count": 0,
                 "registered_word_count": 0,
@@ -221,12 +229,15 @@ class StudyScreen(QWidget):
                 "study_minutes": 0,
                 "study_sessions": []
                 }
-            log_data[today]['studied_word_count'] += len(self.session_reviewed)
+            
+            log_data[today]['studied_word_count'] += len(self.reviewed_words)
             
             with open(log_path, "w", encoding="utf-8") as f:
                 json.dump(log_data, f, ensure_ascii=False, indent=2)
+
         except Exception as e:
             print(f"[WARN] study_log update failed : {e}")
+            
         self.switch_to_home_callback()
 
     def clear_layout(self):

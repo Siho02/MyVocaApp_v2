@@ -7,6 +7,7 @@ from ui.register_csv import RegisterCSVScreen
 from ui.word_list_screen import WordListScreen
 from ui.study_mode_select import StudyModeSelectScreen
 from ui.study_screen import StudyScreen
+from ui.stats_screen import StatsScreen
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -18,8 +19,6 @@ class MainWindow(QMainWindow):
         #total layout
         
         main_layout = QVBoxLayout()
-        #self.setLayout(main_layout)
-
         central_widget = QWidget()
         central_widget.setLayout(main_layout)
         self.setCentralWidget(central_widget)
@@ -35,7 +34,7 @@ class MainWindow(QMainWindow):
             switch_to_home=self.show_home_screen,
             switch_to_study=self.start_study
         )
-
+        self.stats_screen = StatsScreen(self.show_home_screen)
         self.home_screen = HomeScreen(
             switch_to_register_callback=lambda: self.switch_screen(self.register_screen),
             switch_to_csv_callback=lambda: self.switch_screen(self.csv_screen),
@@ -49,15 +48,15 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.csv_screen)
         self.stack.addWidget(self.word_list_screen)
         self.stack.addWidget(self.study_mode_select_screen)
+        self.stack.addWidget(self.stats_screen)
 
         nav_bar = QHBoxLayout()
         btn_home = QPushButton("🏠 홈")
         btn_stats = QPushButton("📊 통계")
         btn_settings = QPushButton("⚙️ 설정")
 
-        btn_home.clicked.connect(lambda : self.switch_screen(self.home_screen))
-        #btn_stats.clicked.connect(lambda: )
-        #btn_settings.clicked.connect(lambda: )
+        btn_home.clicked.connect(self.go_to_home_and_save)
+        btn_stats.clicked.connect(lambda: self.switch_screen(self.stats_screen))
 
         nav_bar.addWidget(btn_home)
         nav_bar.addWidget(btn_stats)
@@ -82,6 +81,18 @@ class MainWindow(QMainWindow):
         self.study_screen = StudyScreen(mode=mode, switch_to_home_callback=self.show_home_screen)
         self.stack.addWidget(self.study_screen)
         self.stack.setCurrentWidget(self.study_screen)
+
+    def go_to_home_and_save(self):
+        current_screen = self.stack.currentWidget()
+        
+        # 현재 화면이 StudyScreen 클래스의 인스턴스인지 확인합니다.
+        if isinstance(current_screen, StudyScreen):
+            # 맞다면, StudyScreen의 저장 및 종료 함수를 호출합니다.
+            current_screen.finish_study_and_return_home()
+        else:
+            # 다른 화면이라면 그냥 홈 화면으로 전환합니다.
+            self.show_home_screen()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
