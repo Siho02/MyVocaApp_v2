@@ -1,14 +1,12 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QTextEdit, QPushButton, QMessageBox
-import json
 from datetime import datetime, timedelta
-import os
 
 class RegisterManualScreen(QWidget):
-    def __init__(self, switch_to_home_callback):
+    def __init__(self, main_window):
         super().__init__()
-        self.switch_to_home_callback = switch_to_home_callback
+        # MainWindow 객체를 통째로 받아와 필요한 기능(데이터, 화면전환)을 사용
+        self.main_window = main_window
         
-         # --- 위젯 생성 ---
         self.word_label = QLabel("단어 :")
         self.word_input = QLineEdit()
         self.word_input.setPlaceholderText("단어 입력")
@@ -22,9 +20,8 @@ class RegisterManualScreen(QWidget):
         self.example_input.setPlaceholderText("예문 입력 (선택)")
 
         self.save_button = QPushButton("저장하기")
-        self.home_button = QPushButton("← 홈으로")
+        self.home_button = QPushButton("← 이전으로") # '홈으로' 대신 '이전으로'가 더 적합
 
-        # --- 레이아웃 구성 ---
         layout = QVBoxLayout()
         layout.addWidget(self.word_label)
         layout.addWidget(self.word_input)
@@ -37,9 +34,9 @@ class RegisterManualScreen(QWidget):
 
         self.setLayout(layout)
 
-        # --- 버튼 동작 연결 ---
         self.save_button.clicked.connect(self.save_word)
-        self.home_button.clicked.connect(self.switch_to_home_callback)
+        # '이전으로' 버튼을 누르면 MainWindow의 go_to_home_screen 함수를 호출
+        self.home_button.clicked.connect(self.main_window.go_to_home_screen)
 
     def save_word(self):
         word = self.word_input.text().strip()
@@ -51,61 +48,41 @@ class RegisterManualScreen(QWidget):
             return
 
         meanings = [m.strip() for m in meaning_text.splitlines() if m.strip()]
+        
+        # MainWindow를 통해 현재 덱의 단어 목록에 접근
+        deck_name = self.main_window.current_deck
+        if not deck_name:
+            QMessageBox.critical(self, "오류", "선택된 덱이 없습니다.")
+            return
+            
+        word_list = self.main_window.app_data["decks"][deck_name]["words"]
+        existing_word_entry = next((item for item in word_list if item["word"] == word), None)
 
-        json_path = "data/words.json"
-        if os.path.exists(json_path):
-            with open(json_path, "r", encoding="utf-8") as f:
-                existing_words = json.load(f)
-        else:
-            existing_words = []
-
-        existing_dict = {w['word']: w for w in existing_words}
         message = ""
-
-        if word in existing_dict:
-            entry = existing_dict[word]
-            original_meanings = set(entry.get("meaning", []))
+        if existing_word_entry: # 이미 단어가 존재할 경우
+            original_meanings = set(existing_word_entry.get("meaning", []))
             new_meanings = set(meanings)
             added_meanings = new_meanings - original_meanings
-
             if added_meanings:
-                entry['meaning'].extend(list(added_meanings))
+                existing_word_entry['meaning'].extend(list(added_meanings))
                 message = f"기존 단어 '{word}'에 뜻 {len(added_meanings)}개를 추가했습니다."
             else:
                 message = f"단어 '{word}'는 이미 등록되어 있으며 새로운 뜻이 없습니다."
-        else:
-            data = {
+        else: # 새로운 단어일 경우
+            new_word_data = {
                 "word": word,
                 "meaning": meanings,
                 "example": example,
                 "created_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                "review_stats": {
-                    "eng_to_kor": {
-                        "correct_cnt": 0,
-                        "incorrect_cnt": 0,
-                        "prob_mode" : "objective", 
-                        "last_reviewed": None,
-                        "next_review" :(datetime.now() + timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M")
-                    },
-                    "kor_to_eng": {
-                        "correct_cnt": 0,
-                        "incorrect_cnt": 0,
-                        "prob_mode" : "objective",
-                        "last_reviewed": None,
-                        "next_review" :(datetime.now() + timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M")
-                    }
+                "review_stats": { # 기본 복습 통계
+                    "eng_to_kor": {"correct_cnt": 0, "incorrect_cnt": 0, "prob_mode" : "objective", "last_reviewed": None, "next_review" :(datetime.now() + timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M")},
+                    "kor_to_eng": {"correct_cnt": 0, "incorrect_cnt": 0, "prob_mode" : "objective", "last_reviewed": None, "next_review" :(datetime.now() + timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M")}
                 }
             }
-            existing_words.append(data)
+            word_list.append(new_word_data)
             message = f"새로운 단어 '{word}'를 등록했습니다."
-            existing_dict[word] = data
         
-        
-        # 저장
-        updated_word_list = list(existing_dict.values())
-        with open(json_path, "w", encoding="utf-8") as f:
-            json.dump(list(existing_dict.values()), f, ensure_ascii=False, indent=2) 
-
+        self.main_window.save_data() # MainWindow를 통해 데이터 저장
         QMessageBox.information(self, "등록 결과", message)
         
         self.word_input.clear()

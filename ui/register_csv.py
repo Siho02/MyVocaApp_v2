@@ -1,16 +1,13 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QFileDialog, QMessageBox
 import csv
-import json
-import os
 from datetime import datetime, timedelta
 
 class RegisterCSVScreen(QWidget):
-    def __init__(self, switch_to_home_callback):
+    def __init__(self, main_window):
         super().__init__()
-        self.switch_to_home_callback = switch_to_home_callback
+        self.main_window = main_window
 
         layout = QVBoxLayout()
-
         self.label = QLabel("CSV 파일을 업로드하여 단어를 등록합니다.")
         layout.addWidget(self.label)
 
@@ -18,95 +15,73 @@ class RegisterCSVScreen(QWidget):
         self.upload_button.clicked.connect(self.upload_csv)
         layout.addWidget(self.upload_button)
 
-        self.home_button = QPushButton("← 홈으로")
-        self.home_button.clicked.connect(self.switch_to_home_callback)
+        self.home_button = QPushButton("← 이전으로")
+        self.home_button.clicked.connect(self.main_window.go_to_home_screen)
         layout.addWidget(self.home_button)
 
         self.setLayout(layout)
 
     def upload_csv(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "CSV 파일 선택", "", "CSV Files (*.csv)")
+        deck_name = self.main_window.current_deck
+        if not deck_name:
+            QMessageBox.critical(self, "오류", "선택된 덱이 없습니다.")
+            return
 
+        file_path, _ = QFileDialog.getOpenFileName(self, "CSV 파일 선택", "", "CSV Files (*.csv)")
         if not file_path:
             return
 
         try:
-            with open(file_path, newline='', encoding='utf-8') as csvfile:
+            with open(file_path, newline='', encoding='utf-8-sig') as csvfile: # utf-8-sig for BOM
                 reader = csv.DictReader(csvfile)
-                new_words = []
-                duplicate_words = []
-                updated_words = []
+                new_words_from_csv = list(reader)
 
-                for row in reader:
-                    word = row['word'].strip()
-                    meanings = [m.strip() for m in row['meaning'].split(';') if m.strip()]
-                    example = row.get('example', '').strip()
+            word_list_in_deck = self.main_window.app_data["decks"][deck_name]["words"]
+            existing_words_dict = {w['word']: w for w in word_list_in_deck}
+            
+            added_count = 0
+            updated_count = 0
+            duplicate_count = 0
 
-                    data = {
-                                "word": word,
-                                "meaning": meanings,
-                                "example": example,
-                                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                                "review_stats": {
-                                    "eng_to_kor": {
-                                        "correct_cnt": 0,
-                                        "incorrect_cnt": 0,
-                                        "prob_mode" : "objective", 
-                                        "last_reviewed": None,
-                                        "next_review" :(datetime.now() + timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M")
-                                    },
-                                    "kor_to_eng": {
-                                        "correct_cnt": 0,
-                                        "incorrect_cnt": 0,
-                                        "prob_mode" : "objective",
-                                        "last_reviewed": None,
-                                        "next_review" :(datetime.now() + timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M")
-                                    }
-                                }
-                            }
-                    new_words.append(data)
+            for row in new_words_from_csv:
+                word = row.get('word', '').strip()
+                if not word: continue
 
-            # 기존 단어 불러오기
-            json_path = "data/words.json"
-            if os.path.exists(json_path):
-                with open(json_path, "r", encoding="utf-8") as f:
-                    existing_words = json.load(f)
-            else:
-                existing_words = []
+                meanings = [m.strip() for m in row.get('meaning', '').split(';') if m.strip()]
+                example = row.get('example', '').strip()
 
-            existing_dict = {w['word']: w for w in existing_words}
-            final_words = existing_words.copy()
-
-            for new_word in new_words:
-                word = new_word['word']
-                if word in existing_dict:
-                    existing_meanings = set(existing_dict[word]['meaning'])
-                    new_meanings = set(new_word['meaning'])
-
-                    added_meanings = new_meanings - existing_meanings
+                if word in existing_words_dict:
+                    entry = existing_words_dict[word]
+                    original_meanings = set(entry.get("meaning", []))
+                    new_meanings_set = set(meanings)
+                    added_meanings = new_meanings_set - original_meanings
+                    
                     if added_meanings:
-                        existing_dict[word]['meaning'].extend(list(added_meanings))
-                        updated_words.append(word)
+                        entry['meaning'].extend(list(added_meanings))
+                        updated_count += 1
                     else:
-                        duplicate_words.append(word)
+                        duplicate_count += 1
                 else:
-                    final_words.append(new_word)
+                    new_word_data = {
+                        "word": word, "meaning": meanings, "example": example,
+                        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                        "review_stats": {
+                            "eng_to_kor": {"correct_cnt": 0, "incorrect_cnt": 0, "prob_mode" : "objective", "last_reviewed": None, "next_review" :(datetime.now() + timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M")},
+                            "kor_to_eng": {"correct_cnt": 0, "incorrect_cnt": 0, "prob_mode" : "objective", "last_reviewed": None, "next_review" :(datetime.now() + timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M")}
+                        }
+                    }
+                    word_list_in_deck.append(new_word_data)
+                    added_count += 1
 
-            with open(json_path, "w", encoding="utf-8") as f:
-                json.dump(final_words, f, ensure_ascii=False, indent=2)
-
-            total = len(new_words)
-            updated = len(updated_words)
-            duplicated = len(duplicate_words)
-            new_entries = total - updated - duplicated
+            self.main_window.save_data()
 
             QMessageBox.information(
                 self, "등록 결과",
-                f"{total}개의 단어 중\n"
-                f"- 중복 단어: {duplicated}개\n"
-                f"- 뜻이 추가된 단어: {updated}개\n"
-                f"- 신규 등록된 단어: {new_entries}개"
+                f"총 {len(new_words_from_csv)}개의 단어 처리 완료\n"
+                f"- 신규 등록: {added_count}개\n"
+                f"- 뜻 추가(업데이트): {updated_count}개\n"
+                f"- 중복: {duplicate_count}개"
             )
 
         except Exception as e:
-            QMessageBox.critical(self, "오류 발생", f"CSV 파일 처리 중 오류: {str(e)}")
+            QMessageBox.critical(self, "오류 발생", f"CSV 파일 처리 중 오류가 발생했습니다: {str(e)}")

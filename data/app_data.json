@@ -1,0 +1,209 @@
+{
+  "decks": {
+    "IELTS words": {
+      "settings": {
+        "study_lang": "한국어",
+        "native_lang": "English"
+      },
+      "words": [
+        {
+          "word": "thesis",
+          "meaning": [
+            "박사(En)",
+            "석사(Us)"
+          ],
+          "example": "",
+          "created_at": "2025-08-14 21:42",
+          "review_stats": {
+            "eng_to_kor": {
+              "correct_cnt": 0,
+              "incorrect_cnt": 0,
+              "prob_mode": "objective",
+              "last_reviewed": null,
+              "next_review": "2025-08-14 22:42"
+            },
+            "kor_to_eng": {
+              "correct_cnt": 0,
+              "incorrect_cnt": 0,
+              "prob_mode": "objective",
+              "last_reviewed": null,
+              "next_review": "2025-08-14 22:42"
+            }
+          }
+        },
+        {
+          "word": "paleobotany",
+          "meaning": [
+            "고식물학"
+          ],
+          "example": "",
+          "created_at": "2025-08-14 22:46",
+          "review_stats": {
+            "eng_to_kor": {
+              "correct_cnt": 0,
+              "incorrect_cnt": 0,
+              "prob_mode": "objective",
+              "last_reviewed": null,
+              "next_review": "2025-08-14 23:46"
+            },
+            "kor_to_eng": {
+              "correct_cnt": 0,
+              "incorrect_cnt": 0,
+              "prob_mode": "objective",
+              "last_reviewed": null,
+              "next_review": "2025-08-14 23:46"
+            }
+          }
+        },
+        {
+          "word": "rigorous",
+          "meaning": [
+            "철저한, 엄격한"
+          ],
+          "example": "",
+          "created_at": "2025-08-14 22:46",
+          "review_stats": {
+            "eng_to_kor": {
+              "correct_cnt": 0,
+              "incorrect_cnt": 0,
+              "prob_mode": "objective",
+              "last_reviewed": null,
+              "next_review": "2025-08-14 23:46"
+            },
+            "kor_to_eng": {
+              "correct_cnt": 0,
+              "incorrect_cnt": 0,
+              "prob_mode": "objective",
+              "last_reviewed": null,
+              "next_review": "2025-08-14 23:46"
+            }
+          }
+        },
+        {
+          "word": "excavate",
+          "meaning": [
+            "~을 발굴하다, ~을 출토하다, ~을 파다"
+          ],
+          "example": "",
+          "created_at": "2025-08-14 22:46",
+          "review_stats": {
+            "eng_to_kor": {
+              "correct_cnt": 0,
+              "incorrect_cnt": 0,
+              "prob_mode": "objective",
+              "last_reviewed": null,
+              "next_review": "2025-08-14 23:46"
+            },
+            "kor_to_eng": {
+              "correct_cnt": 0,
+              "incorrect_cnt": 0,
+              "prob_mode": "objective",
+              "last_reviewed": null,
+              "next_review": "2025-08-14 23:46"
+            }
+          }
+        },
+        {
+          "word": "dispute",
+          "meaning": [
+            "분쟁",
+            "분규",
+            "논란",
+            "논쟁, ~을 반박하다, 이의를 제기하다"
+          ],
+          "example": "",
+          "created_at": "2025-08-14 22:46",
+          "review_stats": {
+            "eng_to_kor": {
+              "correct_cnt": 0,
+              "incorrect_cnt": 0,
+              "prob_mode": "objective",
+              "last_reviewed": null,
+              "next_review": "2025-08-14 23:46"
+            },
+            "kor_to_eng": {
+              "correct_cnt": 0,
+              "incorrect_cnt": 0,
+              "prob_mode": "objective",
+              "last_reviewed": null,
+              "next_review": "2025-08-14 23:46"
+            }
+          }
+        },
+        {
+          "word": "opt in",
+          "meaning": [
+            "(~에) 참여하기로 하다."
+          ],
+          "example": "",
+          "created_at": "2025-08-14 22:46",
+          "review_stats": {
+            "eng_to_kor": {
+              "correct_cnt": 0,
+              "incorrect_cnt": 0,
+              "prob_mode": "objective",
+              "last_reviewed": null,
+              "next_review": "2025-08-14 23:46"
+            },
+            "kor_to_eng": {
+              "correct_cnt": 0,
+              "incorrect_cnt": 0,
+              "prob_mode": "objective",
+              "last_reviewed": null,
+              "next_review": "2025-08-14 23:46"
+            }
+          }
+        },
+        {
+          "word": "assimilate",
+          "meaning": [
+            "~을 완전히 이해하다, 동화되다, ~을 흡수하다"
+          ],
+          "example": "",
+          "created_at": "2025-08-14 22:46",
+          "review_stats": {
+            "eng_to_kor": {
+              "correct_cnt": 0,
+              "incorrect_cnt": 0,
+              "prob_mode": "objective",
+              "last_reviewed": null,
+              "next_review": "2025-08-14 23:46"
+            },
+            "kor_to_eng": {
+              "correct_cnt": 0,
+              "incorrect_cnt": 0,
+              "prob_mode": "objective",
+              "last_reviewed": null,
+              "next_review": "2025-08-14 23:46"
+            }
+          }
+        },
+        {
+          "word": "trace back",
+          "meaning": [
+            "거슬러 올라가다"
+          ],
+          "example": "",
+          "created_at": "2025-08-14 22:46",
+          "review_stats": {
+            "eng_to_kor": {
+              "correct_cnt": 0,
+              "incorrect_cnt": 0,
+              "prob_mode": "objective",
+              "last_reviewed": null,
+              "next_review": "2025-08-14 23:46"
+            },
+            "kor_to_eng": {
+              "correct_cnt": 0,
+              "incorrect_cnt": 0,
+              "prob_mode": "objective",
+              "last_reviewed": null,
+              "next_review": "2025-08-14 23:46"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "study_log": {}
+}
