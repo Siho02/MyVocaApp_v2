@@ -1,31 +1,33 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel
+from PyQt5.QtCore import pyqtSignal
 
 class StudyModeSelectScreen(QWidget):
-    def __init__(self, switch_to_home, switch_to_study):
+    mode_selected = pyqtSignal(str)
+
+    def __init__(self, main_window):
         super().__init__()
-        self.switch_to_home = switch_to_home
-        self.switch_to_study = switch_to_study
-        self.init_ui()
+        self.main_window = main_window
 
-    def init_ui(self):
-        layout = QVBoxLayout()
+        layout = QVBoxLayout(self)
 
-        label = QLabel("📘 어떤 방식으로 공부할까요?")
-        layout.addWidget(label)
+        self.label = QLabel("📘 어떤 방식으로 공부할까요?")
+        layout.addWidget(self.label)
 
-        # 영어 → 한국어 버튼
-        eng_to_kor_button = QPushButton("영어 → 한국어")
-        eng_to_kor_button.clicked.connect(lambda: self.switch_to_study("eng_to_kor"))
-        layout.addWidget(eng_to_kor_button)
+        # study language → native language 버튼
+        self.study_to_native_button = QPushButton()
+        self.study_to_native_button.clicked.connect(lambda: self.mode_selected.emit("study_to_native"))
+        layout.addWidget(self.study_to_native_button)
 
-        # 한국어 → 영어 버튼
-        kor_to_eng_button = QPushButton("한국어 → 영어")
-        kor_to_eng_button.clicked.connect(lambda: self.switch_to_study("kor_to_eng"))
-        layout.addWidget(kor_to_eng_button)
+        # native language → study language 버튼
+        self.native_to_study_button = QPushButton()
+        self.native_to_study_button.clicked.connect(lambda: self.mode_selected.emit("native_to_study"))
+        layout.addWidget(self.native_to_study_button)
 
-        '''# 홈으로 돌아가기 버튼
-        home_button = QPushButton("🏠 홈으로")
-        home_button.clicked.connect(self.switch_to_home)
-        layout.addWidget(home_button)
-        '''
-        self.setLayout(layout)
+        back_button = QPushButton("← 이전으로")
+        back_button.clicked.connect(self.main_window.go_to_home_screen)
+        layout.addWidget(back_button)
+
+    def set_deck_languages(self, study_lang, native_lang):
+        """main.py로부터 언어 설정을 받아 버튼 텍스트를 업데이트"""
+        self.study_to_native_button.setText(f"{study_lang} → {native_lang}")
+        self.native_to_study_button.setText(f"{native_lang} → {study_lang}")

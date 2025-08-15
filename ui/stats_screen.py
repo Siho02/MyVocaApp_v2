@@ -4,8 +4,10 @@ from datetime import datetime, timedelta
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QGridLayout, QGroupBox
 from PyQt5.QtCore import pyqtSignal, Qt, QEvent
 
+# -----------------------------------------------------
+# 1. 날짜 별 활동 그래프
+# ----------------------------------------------------- 
 class ContributionGraph(QWidget):
-    # This class remains the same as before
     day_clicked = pyqtSignal(str)
 
     def __init__(self):
@@ -45,14 +47,18 @@ class ContributionGraph(QWidget):
         for day_offset in range(num_weeks * 7):
             date = start_date + timedelta(days=day_offset)
             if date > today: continue
+
             row, col = date.weekday() + 1, day_offset // 7
             date_str = date.strftime("%Y-%m-%d")
+            
             count = log_data.get(date_str, {}).get("studied_word_count", 0)
+            
             cell = QLabel()
             cell.setFixedSize(16, 16)
             cell.setStyleSheet(f"background-color: {self.get_color(count)}; border-radius: 3px;")
             cell.setToolTip(f"{date_str}\n학습 단어: {count}개")
             cell.installEventFilter(self)
+            
             self.grid_layout.addWidget(cell, row, col + 1)
             self.cells[cell] = date_str
 
@@ -62,11 +68,14 @@ class ContributionGraph(QWidget):
             return True
         return super().eventFilter(source, event)
 
+# -----------------------------------------------------
+# 2. 통계 화면 전체 구성 
+# ----------------------------------------------------- 
 class StatsScreen(QWidget):
-    # <<< 수정된 부분: 생성자에서 'switch_to_home_callback' 인자 제거 >>>
-    def __init__(self):
+    def __init__(self, main_window):
         super().__init__()
-        self.log_data = {}
+        self.main_window = main_window
+        self.log_data_by_date= {}
 
         self.layout = QVBoxLayout(self)
 
@@ -100,46 +109,51 @@ class StatsScreen(QWidget):
         self.layout.addStretch()
         self.layout.addWidget(self.daily_detail_group)
         
-        # <<< 수정된 부분: 'home_button' 관련 코드 모두 삭제됨 >>>
         self.contribution_graph.day_clicked.connect(self.on_day_clicked)
         self.load_stats_data()
 
     def load_stats_data(self):
-        log_path = "data/app_data.json"
-        if os.path.exists(log_path):
-            with open(log_path, 'r', encoding='utf-8') as f:
-                try: 
-                    full_data = json.load(f)
-                    self.log_data = full_data.get("study_log", {})
-                except json.JSONDecodeError: 
-                    self.log_data = {}
+        """모든 덱의 로그를 읽어와 종합 통계를 계산하는 함수"""
+        all_decks = self.main_window.app_data.get("decks", {})
         
-        total_words = 0
-        total_minutes = 0
-        total_correct = 0
-        total_incorrect = 0
-        
-        for daily_log in self.log_data.values():
-            total_words += daily_log.get("studied_word_count", 0)
-            total_minutes += daily_log.get("study_minutes", 0)
-            total_correct += daily_log.get("correct_count", 0)
-            total_incorrect += daily_log.get("incorrect_count", 0)
+        # 통계 데이터 초기화
+        total_words, total_correct, total_incorrect = 0, 0, 0
+        self.log_data_by_date = {}
 
-        hours, minutes = divmod(total_minutes, 60)
+        # 모든 덱을 순회하며 로그를 합산
+        for deck_data in all_decks.values():
+            log_data = deck_data.get("study_log", {})
+            for date, daily_log in log_data.items():
+                # 날짜별 데이터 집계 (그래프 및 상세 정보용)
+                if date not in self.log_data_by_date:
+                    self.log_data_by_date[date] = {"studied_word_count": 0, "correct_count": 0, "incorrect_count": 0}
+                
+                self.log_data_by_date[date]["studied_word_count"] += daily_log.get("studied_word_count", 0)
+                self.log_data_by_date[date]["correct_count"] += daily_log.get("correct_count", 0)
+                self.log_data_by_date[date]["incorrect_count"] += daily_log.get("incorrect_count", 0)
+
+        # 합산된 데이터를 기반으로 전체 통계 계산
+        for daily_summary in self.log_data_by_date.values():
+            total_words += daily_summary["studied_word_count"]
+            total_correct += daily_summary["correct_count"]
+            total_incorrect += daily_summary["incorrect_count"]
+        
+        # 상단 전체 통계 라벨 업데이트
         self.total_words_label.setText(f"총 학습 단어: {total_words}개")
-        self.total_time_label.setText(f"총 학습 시간: {hours}시간 {minutes}분")
-
         if (total_correct + total_incorrect) > 0:
             accuracy = (total_correct / (total_correct + total_incorrect)) * 100
             self.total_accuracy_label.setText(f"전체 정답률: {accuracy:.2f}%")
         else:
             self.total_accuracy_label.setText("전체 정답률: 0.00%")
         
-        self.contribution_graph.set_data(self.log_data)
+        # 그래프 데이터 설정
+        self.contribution_graph.set_data(self.log_data_by_date)
+        # 상세 정보창 숨기기
+        self.daily_detail_group.hide()
 
     def on_day_clicked(self, date_str):
         # This method remains the same
-        daily_data = self.log_data.get(date_str)
+        daily_data = self.log_data_by_date.get(date_str)
         if not daily_data:
             self.daily_detail_group.hide()
             return
@@ -149,12 +163,10 @@ class StatsScreen(QWidget):
         self.detail_date_label.setText(f"{formatted_date}")
 
         words = daily_data.get("studied_word_count", 0)
-        minutes = daily_data.get("study_minutes", 0)
         correct = daily_data.get("correct_count", 0)
         incorrect = daily_data.get("incorrect_count", 0)
 
         self.detail_words_label.setText(f"∙ 학습 단어: {words}개")
-        self.detail_time_label.setText(f"∙ 학습 시간: {minutes}분")
 
         if (correct + incorrect) > 0:
             accuracy = (correct / (correct + incorrect)) * 100

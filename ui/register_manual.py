@@ -75,8 +75,8 @@ class RegisterManualScreen(QWidget):
                 "example": example,
                 "created_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
                 "review_stats": { # 기본 복습 통계
-                    "eng_to_kor": {"correct_cnt": 0, "incorrect_cnt": 0, "prob_mode" : "objective", "last_reviewed": None, "next_review" :(datetime.now() + timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M")},
-                    "kor_to_eng": {"correct_cnt": 0, "incorrect_cnt": 0, "prob_mode" : "objective", "last_reviewed": None, "next_review" :(datetime.now() + timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M")}
+                    "study_to_native": {"correct_cnt": 0, "incorrect_cnt": 0, "prob_mode" : "objective", "last_reviewed": None, "next_review" :(datetime.now() + timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M")},
+                    "native_to_study": {"correct_cnt": 0, "incorrect_cnt": 0, "prob_mode" : "objective", "last_reviewed": None, "next_review" :(datetime.now() + timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M")}
                 }
             }
             word_list.append(new_word_data)

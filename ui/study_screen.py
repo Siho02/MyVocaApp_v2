@@ -1,255 +1,281 @@
-from PyQt5.QtWidgets import QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QMessageBox
+from PyQt5.QtWidgets import QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QMessageBox, QFrame
 from datetime import datetime, timedelta
-import json, os, random
-from ui.review_utils import update_study_log, calculate_after_min
+import random, difflib
+
+# review_utils.py가 필요하다면 다시 임포트
+# from ui.review_utils import update_study_log, calculate_after_min
 
 class StudyScreen(QWidget):
-    def __init__(self, switch_to_home_callback, mode="eng_to_kor"):
+    def __init__(self, main_window):
         super().__init__()
-        self.switch_to_home_callback = switch_to_home_callback
-        self.mode = mode
+        self.main_window = main_window
 
-        # session and state
-        self.word_list = []
-        self.all_words = []
-        self.session_started = False
-        self.start_time = None 
-        self.total_correct = 0
-        self.total_incorrect = 0
-        self.reviewed_words = set()
+        self.mode = None
+        self.word_list_for_review = []
+        self.incorrectly_answered_words = [] 
+        self.is_reviewing_mistakes = False 
         self.current_word = None
-        
-        self.init_ui()
-        self.load_words()
-        self.next_question()
+        self.session_correct = 0
+        self.session_word_count = 0
+        self.session_incorrect = 0
 
-    def init_ui(self):
-        self.layout = QVBoxLayout()
+        # --- UI 위젯 초기화 ---
+        self.layout = QVBoxLayout(self)
+        self.question_label = QLabel("질문이 여기에 표시됩니다.")
 
-        self.label_question = QLabel("질문이 여기 표시 됩니다.")
+        # --- 주관식용 위젯 
+        self.subjective_widget = QWidget()
+        subjective_layout = QHBoxLayout(self.subjective_widget)
         self.answer_input = QLineEdit()
         self.submit_button = QPushButton('제출')
-        self.submit_button.clicked.connect(self.check_subjective_answer)
+        subjective_layout.addWidget(self.answer_input)
+        subjective_layout.addWidget(self.submit_button)
         
-        self.home_button = QPushButton("홈으로")
-        self.home_button.clicked.connect(self.finish_study_and_return_home)
+        # ---객관식용 위젯
+        self.objective_widget = QWidget()
+        self.objective_layout = QVBoxLayout(self.objective_widget)
 
-        self.layout.addWidget(self.label_question)
-        self.layout.addWidget(self.answer_input)
-        self.layout.addWidget(self.submit_button)
-        self.layout.addWidget(self.home_button)
-        self.setLayout(self.layout)
+        self.finish_button = QPushButton("학습 종료")
 
-    def load_words(self):
-        file_path = 'data/words.json'
-        if os.path.exists(file_path):
-            with open(file_path, encoding='utf-8') as f:
-                try: all_words = json.load(f)
-                except json.JSONDecodeError: all_words = []
-        else:
-            all_words = []
+        self.layout.addWidget(self.question_label)
+        self.layout.addWidget(self.subjective_widget)
+        self.layout.addWidget(self.objective_widget)
+        self.layout.addStretch(1)
+        self.layout.addWidget(self.finish_button)
 
+        self.submit_button.clicked.connect(self.check_subjective_answer)
+        self.finish_button.clicked.connect(self.finish_study_session)
+
+    def start_new_study_session(self, mode):
+        # 세션 시작 -> 모든 상태 초기화
+        self.mode = mode
+        self.is_reviewing_mistakes = False
+        self.incorrectly_answered_words = []
+        self.session_correct = 0; self.session_incorrect = 0
+        
+        deck_name = self.main_window.current_deck
+        all_words_in_deck = self.main_window.app_data["decks"][deck_name]["words"]
+        
         now = datetime.now()
-        self.word_list = [
-            w for w in all_words
-            if w.get("review_stats", {}).get(self.mode, {}).get("next_review") is not None and
+        self.word_list_for_review = [
+            w for w in all_words_in_deck
+            if w.get("review_stats", {}).get(self.mode, {}).get("next_review") and
                datetime.strptime(w['review_stats'][self.mode]['next_review'], "%Y-%m-%d %H:%M") <= now
         ]
-        self.all_words = all_words
+        
+        self.session_word_count = len(self.word_list_for_review)
 
+        if not self.word_list_for_review:
+            return False
+
+        random.shuffle(self.word_list_for_review) # 단어 순서 섞기
+        self.next_question()
+        return True
+    
     def next_question(self):
-        #no word to review
-        if not self.word_list:
-            self.clear_layout()
-            self.label_question.hide()
-            QMessageBox.information(self, "완료", "복습할 단어가 없습니다.")
-            self.finish_study_and_return_home()
+        if not self.word_list_for_review:
+            # 틀린 단어 다시 풀기
+            self.prompt_for_mistake_review()
             return
-
-        if not self.session_started:
-            self.session_started = True
-            self.start_time = datetime.now().strftime("%H:%M")
-            #self.label_question.show()
-
-        self.clear_layout()
-        self.current_word = random.choice(self.word_list)
+            
+        self.current_word = self.word_list_for_review.pop()
 
         stats = self.current_word['review_stats'][self.mode]
-        prob_mode = stats.get("prob_mode", "objective")
-        correct = stats.get("correct_cnt", 0)
-        incorrect = stats.get("incorrect_cnt", 0)
-        total = correct + incorrect
-        accuracy = correct / total if total > 0 else 0
+        total_reviews = stats['correct_cnt'] + stats['incorrect_cnt']
+        accuracy = 0
+        if total_reviews > 0:
+            accuracy = stats['correct_cnt'] / total_reviews
 
-        if total >= 10 and accuracy >= 0.85:
-            stats['prob_mode'] = 'subjective'
-            prob_mode = 'subjective'
+        if total_reviews >= 10 and accuracy >= 0.85:
+            self.create_subjective_question()
         else:
-            stats['prob_mode'] = 'objective'
+            self.create_objective_question()
+        
+    def create_objective_question(self):
+        self.objective_widget.show()
+        self.subjective_widget.hide()
+        self._clear_objective_buttons()
 
-        for i, w in enumerate(self.all_words):
-            if w['word'] == self.current_word['word']:
-                self.all_words[i] = self.current_word
-                break
-
-        with open('data/words.json', 'w', encoding='utf-8') as f:
-            json.dump(self.all_words, f, ensure_ascii=False, indent=2)
-
-        if prob_mode == 'subjective':
-            self.show_subjective_question()
+        # 객관식 문제 생성
+        # 질문 설정
+        if self.mode == 'study_to_native':
+            question_text = self.current_word['word']
         else:
-            if self.mode == 'eng_to_kor':
-                self.show_objective_eng_to_kor()
-            else:
-                self.show_objective_kor_to_eng()
+            question_text = random.choice(self.current_word['meaning'])
+        self.question_label.setText(f"'{question_text}'의 뜻으로 올바른 것은?")
 
-    def show_objective_eng_to_kor(self):
-        self.clear_layout()
-        correct = random.choice(self.current_word['meaning'])
-        all_meanings = [m for w in self.all_words if w['word'] != self.current_word['word'] for m in w.get("meaning", [])]
-        wrong_choices = random.sample(all_meanings, 3) if len(all_meanings) >= 3 else all_meanings
-        options = wrong_choices + [correct]
-        random.shuffle(options)
+        # 보기 생성
+        correct_answers = self.current_word['meaning'] if self.mode == 'study_to_native' else [self.current_word['word']]
+        choices = self._get_distractors(correct_answers)
+        choices.append(random.choice(correct_answers))
+        random.shuffle(choices)
 
-        self.label_question.setText(f"'{self.current_word['word']}'의 뜻은?")
-        for option in options:
-            btn = QPushButton(option)
-            btn.clicked.connect(lambda _, c=option: self.check_objective_answer(c, correct))
-            self.layout.addWidget(btn)
+        # 버튼 생성
+        for choice in choices:
+            btn = QPushButton(choice)
+            btn.clicked.connect(lambda _, c=choice: self.check_objective_answer(c))
+            self.objective_layout.addWidget(btn)
+        self.objective_layout.addStretch(1)
 
-    def show_objective_kor_to_eng(self):
-        self.clear_layout()
-        correct = self.current_word['word']
-        meaning = random.choice(self.current_word['meaning'])
-        all_words = [w['word'] for w in self.all_words if w['word'] != correct]
-        wrong_choices = random.sample(all_words, 3) if len(all_words) >= 3 else all_words
-        options = wrong_choices + [correct]
-        random.shuffle(options)
+    def create_subjective_question(self):
+        self.subjective_widget.show()
+        self.objective_widget.hide()
+        self.answer_input.clear()
 
-        self.label_question.setText(f"'{meaning}' 에 해당하는 영어 단어는?")
-        for option in options:
-            btn = QPushButton(option)
-            btn.clicked.connect(lambda _, c=option: self.check_objective_answer(c, correct))
-            self.layout.addWidget(btn)
-
-    def show_subjective_question(self):
-        self.clear_layout()
-        if self.mode == 'eng_to_kor':
-            question = self.current_word['word']
-            self.label_question.setText(f"'{question}'의 뜻을 입력하세요:")
+        # 질문 설정
+        if self.mode == 'study_to_native':
+            question_text = self.current_word['word']
+            prompt = "의 뜻을 입력하세요."
         else:
-            question = ", ".join(self.current_word['meaning'])
-            self.label_question.setText(f"'{question}'에 해당하는 영어 단어는?")
+            question_text = random.choice(self.current_word['meaning'])
+            prompt = "에 해당하는 단어를 입력하세요."
+        self.question_label.setText(f"'{question_text}' {prompt}")
 
-        self.answer_input = QLineEdit()
-        self.submit_button = QPushButton('제출')
-        self.submit_button.clicked.connect(self.check_subjective_answer)
-        self.layout.addWidget(self.answer_input)
-        self.layout.addWidget(self.submit_button)
-
-    def check_objective_answer(self, selected, correct):
-        is_correct = selected.strip().lower() == correct.strip().lower()
-        self.process_answer(is_correct)
+    def check_objective_answer(self, chosen_answer):
+        correct_answers = self.current_word['meaning'] if self.mode == 'study_to_native' else [self.current_word['word']]
+        is_correct = chosen_answer in correct_answers
+        self.process_answer_result(is_correct)
 
     def check_subjective_answer(self):
-        user_answer = self.answer_input.text().strip().replace(" ", "")
-        if self.mode == 'eng_to_kor':
-            correct_answers = [m.replace(" ", "") for m in self.current_word['meaning']] if self.mode == 'eng_to_kor' else [self.current_word['word'].replace(" ", "")]
-        else:
-            correct_answers = [self.current_word['word'].replace(" ", "")]
-        is_correct = user_answer in correct_answers
-        self.process_answer(is_correct)
-
-    def process_answer(self, is_correct):
-        if not self.current_word or self.current_word not in self.word_list:
-            return 
+        user_answer = self.answer_input.text().strip()
         
-        stats = self.current_word['review_stats'][self.mode]
+        if self.mode == 'study_to_native':
+            correct_answers = self.current_word['meaning']
+            is_correct = user_answer in correct_answers # 뜻 중 하나만 맞아도 정답
 
+            #아깝게 틀린 경우 확인
+            if not is_correct:
+                for answer in correct_answers:
+                    similarity = difflib.SequenceMatcher(None, user_answer, answer).ratio()
+                    if similarity >= 0.8: # 80% 이상 유사하면 '아까운 오답'
+                        self.process_answer_result(False, was_close=True, suggestion=answer)
+                        return
+            self.process_answer_result(is_correct)
+
+        else:
+            correct_answer = self.current_word['word']
+            is_correct = user_answer.lower() == correct_answer.lower()
+            
+            if not is_correct:
+                similarity = difflib.SequenceMatcher(None, user_answer.lower(), correct_answer.lower()).ratio()
+                if similarity >= 0.8:
+                    self.process_answer_result(False, was_close=True, suggestion=correct_answer)
+                    return
+            self.process_answer_result(is_correct)
+    
+    def process_answer_result(self, is_correct, was_close=False, suggestion=""):
+        # 피드백 메시지 생성
         if is_correct:
-            QMessageBox.information(self, "정답", "정답입니다!")
-            self.total_correct += 1
-            stats['correct_cnt'] += 1
-        
+            message = "정답입니다! 🎉"
+        elif was_close:
+            message = f"아깝네요! 혹시 '{suggestion}'을(를) 입력하려고 하셨나요?"
         else:
-            QMessageBox.information(self, "오답", "오답입니다!")
-            self.total_incorrect += 1
-            stats['incorrect_cnt'] += 1
-
-        self.reviewed_words.add(self.current_word['word'])
+            message = "오답입니다."
         
-        now = datetime.now()
-        stats['last_reviewed'] = now.strftime("%Y-%m-%d %H:%M")
-        after_min = calculate_after_min(stats['correct_cnt'], stats['incorrect_cnt'])
-        stats['next_review'] = (now + timedelta(minutes=after_min)).strftime('%Y-%m-%d %H:%M')
+        # 주관식의 경우 항상 모든 뜻 보여주기 (객관식 포함)
+        all_meanings = ", ".join(self.current_word['meaning'])
+        correct_word = self.current_word['word']
+        full_answer_text = f"단어: {correct_word}\n전체 뜻: {all_meanings}"
+        
+        QMessageBox.information(self, "결과", f"{message}\n\n{full_answer_text}")
 
-        for i, w in enumerate(self.all_words):
-            if w['word'] == self.current_word['word']:
-                self.all_words[i] = self.current_word
-                break
+        # review_stats 업데이트
+        if not is_correct and not self.is_reviewing_mistakes:
+             self.incorrectly_answered_words.append(self.current_word)
+        
+        if is_correct: self.session_correct += 1
+        else: self.session_incorrect += 1
 
-        with open("data/words.json", "w", encoding="utf-8") as f:
-            json.dump(self.all_words, f, ensure_ascii=False, indent=2)
+        stats = self.current_word['review_stats'][self.mode]
+        stats['correct_cnt'] += 1 if is_correct else 0
+        stats['incorrect_cnt'] += 1 if not is_correct else 0
+        stats['last_reviewed'] = datetime.now().strftime("%Y-%m-%d %H:%M")
+        
+        # 복습 주기 계산 (간단한 로직)
+        corrects = stats['correct_cnt']
+        incorrects = stats['incorrect_cnt']
+        if is_correct:
+            after_min = 60 * (2 ** corrects) if corrects > 0 else 60
+        else:
+            after_min = 30
+        stats['next_review'] = (datetime.now() + timedelta(minutes=after_min)).strftime('%Y-%m-%d %H:%M')
 
-        self.word_list.remove(self.current_word)
-        self.current_word = None
-        #self.last_question_time = datetime.now().strftime("%H:%M")
+        self.main_window.save_data()
         self.next_question()
 
-    def finish_study_and_return_home(self):
-        # ✅ 세션이 시작되지 않는 경우 기록하지 않음
-        if not self.session_started:
-            self.switch_to_home_callback()
-            return
+    def prompt_for_mistake_review(self):
+        if self.incorrectly_answered_words and not self.is_reviewing_mistakes:
+            reply = QMessageBox.question(self, '오답 다시 풀기', 
+                                         f"오늘 {len(self.incorrectly_answered_words)}개의 단어를 틀렸습니다.\n틀린 단어들을 다시 복습하시겠습니까?",
+                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+            
+            if reply == QMessageBox.Yes:
+                self.word_list_for_review = self.incorrectly_answered_words
+                self.incorrectly_answered_words = []
+                self.is_reviewing_mistakes = True
+                random.shuffle(self.word_list_for_review)
+                self.next_question()
+                return
 
-        end_time = datetime.now().strftime("%H:%M")
+        QMessageBox.information(self, "학습 완료", "오늘의 학습을 모두 마쳤습니다!")
+        self.finish_study_session()
+
+    def finish_study_session(self):
+        # 학습 세션 로그 기록 
+        deck_name = self.main_window.current_deck
+        if not deck_name: return
+
+        deck_data = self.main_window.app_data["decks"][deck_name]
         
-        update_study_log("study", 
-                         correct= self.total_correct, 
-                         incorrect= self.total_incorrect, 
-                         start_time = self.start_time, 
-                         end_time = end_time)
+        if "study_log" not in deck_data:
+            deck_data["study_log"] = {}
+        
+        today_str = datetime.now().strftime("%Y-%m-%d")
 
-        log_path = "data/study_log.json"
-        try:
-            if os.path.exists(log_path):
-                with open(log_path, "r", encoding="utf-8") as f:
-                    log_data = json.load(f)
-            else:
-                log_data = {}
-
-            today = datetime.now().strftime("%Y-%m-%d")
-            if today not in log_data:
-                log_data[today] = {
+        # 오늘 날짜의 로그가 없으면 새로 생성
+        if today_str not in deck_data["study_log"]:
+            deck_data["study_log"][today_str] = {
                 "studied_word_count": 0,
-                "registered_word_count": 0,
-                "deleted_word_count": 0,
                 "correct_count": 0,
                 "incorrect_count": 0,
-                "study_minutes": 0,
-                "study_sessions": []
-                }
-            
-            log_data[today]['studied_word_count'] += len(self.reviewed_words)
-            
-            with open(log_path, "w", encoding="utf-8") as f:
-                json.dump(log_data, f, ensure_ascii=False, indent=2)
-
-        except Exception as e:
-            print(f"[WARN] study_log update failed : {e}")
-            
-        self.switch_to_home_callback()
-
-    def clear_layout(self):
-        for i in reversed(range(self.layout.count())):
-            item = self.layout.itemAt(i)
-            widget = item.widget()
-            if widget is not None and widget != self.label_question:
-                widget.setParent(None)
+                "study_minutes": 0 # 분 단위 기록은 단순화를 위해 일단 제외
+            }
         
-        '''
-        while self.layout.count():
-            child = self.layout.takeAt(0)
+        # 로그 업데이트
+        today_log = deck_data["study_log"][today_str]
+        today_log["correct_count"] += self.session_correct
+        today_log["incorrect_count"] += self.session_incorrect
+        
+        # 학습한 단어 수 = 맞은 개수 + 틀린 개수 (오답노트 제외)
+        if not self.is_reviewing_mistakes:
+            today_log["studied_word_count"] += (self.session_correct + self.session_incorrect)
+
+        today_log["studied_word_count"] += self.session_word_count
+
+        self.main_window.save_data() # 변경사항 저장
+        self.main_window.go_to_home_screen()
+    
+    def _clear_objective_buttons(self):
+        while self.objective_layout.count():
+            child = self.objective_layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
-        '''
+
+    def _get_distractors(self, correct_answers):
+        # 전체 덱에서 오답 보기를 추출하는 로직
+        all_words_in_deck = self.main_window.app_data["decks"][self.main_window.current_deck]["words"]
+        
+        if self.mode == 'study_to_native':
+            distractor_pool = [m for w in all_words_in_deck for m in w['meaning'] if w != self.current_word]
+        else:
+            distractor_pool = [w['word'] for w in all_words_in_deck if w != self.current_word]
+        
+        # 중복 제거 및 정답과 겹치지 않게 처리
+        distractor_pool = list(set(distractor_pool) - set(correct_answers))
+        
+        return random.sample(distractor_pool, min(len(distractor_pool), 3))
+    
+    def clear_answer_widgets(self):
+        # 레이아웃에서 답변 관련 위젯들 숨기기
+        self.answer_input.hide()
+        self.submit_button.hide()
