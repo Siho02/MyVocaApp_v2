@@ -14,6 +14,30 @@ from ui.register_csv import RegisterCSVScreen
 from ui.word_list_screen import WordListScreen
 from ui.study_mode_select import StudyModeSelectScreen
 from ui.study_screen import StudyScreen
+from ui.settings_screen import SettingsScreen
+
+DARK_STYLE = """
+QWidget {
+    background-color: #2E2E2E;
+    color: #FFFFFF;
+    font-family: Malgun Gothic;
+}
+QPushButton {
+    background-color: #555555;
+    border: 1px solid #777777;
+    padding: 5px;
+    border-radius: 5px;
+}
+QPushButton:hover {
+    background-color: #777777;
+}
+QLineEdit, QTextEdit {
+    background-color: #444444;
+    border: 1px solid #777777;
+    padding: 5px;
+    border-radius: 5px;
+}
+"""
 
 DATA_FILE = "data/app_data.json"
 
@@ -52,8 +76,9 @@ class MainWindow(QMainWindow):
         self.register_manual_screen = RegisterManualScreen(self)
         self.register_csv_screen = RegisterCSVScreen(self)
         self.word_list_screen = WordListScreen(self)
-        self.study_mode_select_screen = StudyModeSelectScreen(self) # [추가]
-        self.study_screen = StudyScreen(self) # [추가]
+        self.study_mode_select_screen = StudyModeSelectScreen(self) 
+        self.study_screen = StudyScreen(self)
+        self.settings_screen = SettingsScreen(self) 
         self.home_screen = HomeScreen(
             switch_to_register_callback=self.open_manual_register,
             switch_to_csv_callback=self.open_csv_register,
@@ -69,8 +94,9 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.register_manual_screen)
         self.stack.addWidget(self.register_csv_screen)
         self.stack.addWidget(self.word_list_screen)
-        self.stack.addWidget(self.study_mode_select_screen) # [추가]
-        self.stack.addWidget(self.study_screen) # [추가]
+        self.stack.addWidget(self.study_mode_select_screen) 
+        self.stack.addWidget(self.study_screen)
+        self.stack.addWidget(self.settings_screen)
 
         # --- 시그널 연결 ---
         # ... (이전 시그널 연결)
@@ -81,6 +107,7 @@ class MainWindow(QMainWindow):
         
         btn_home.clicked.connect(self.go_to_first_screen)
         btn_stats.clicked.connect(self.go_to_stats_screen)
+        btn_settings.clicked.connect(self.go_to_settings_screen)
 
         self.go_to_first_screen()
         self.show()
@@ -111,7 +138,10 @@ class MainWindow(QMainWindow):
     def go_to_home_screen(self):
         if self.current_deck: self.home_screen.set_deck_name(self.current_deck)
         self.stack.setCurrentWidget(self.home_screen)
-        
+
+    def go_to_settings_screen(self): 
+        self.stack.setCurrentWidget(self.settings_screen)
+
     def go_to_first_screen(self):
         self.deck_selection_screen.update_deck_list(list(self.app_data["decks"].keys()))
         self.stack.setCurrentWidget(self.deck_selection_screen)
@@ -161,5 +191,6 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setStyleSheet(DARK_STYLE)
     window = MainWindow()
     sys.exit(app.exec_())
