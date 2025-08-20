@@ -49,7 +49,7 @@ class WordListScreen(QWidget):
             return
             
         self.title.setText(f"📖 '{deck_name}' 덱 단어 목록")
-        self.word_data = self.main_window.app_data["decks"][deck_name]["words"]
+        self.word_data = self.main_window.data_manager.app_data["decks"][deck_name]["words"]
         
         self.word_list_widget.clear()
         for entry in self.word_data:
@@ -88,7 +88,7 @@ class WordListScreen(QWidget):
         confirm = QMessageBox.question(self, "삭제 확인", f"'{word_to_delete}' 단어를 정말 삭제하시겠습니까?")
         if confirm == QMessageBox.Yes:
             del self.word_data[index] # self.word_data는 실제 app_data의 단어 리스트를 가리킴
-            self.main_window.save_data() # 변경사항 저장
+            self.main_window.data_manager.save_data() # 변경사항 저장
             QMessageBox.information(self, "삭제 완료", f"'{word_to_delete}' 단어가 삭제되었습니다.")
             self.load_words() # 목록 새로고침
 
@@ -118,7 +118,7 @@ class WordListScreen(QWidget):
             entry["meaning"] = [m.strip() for m in meaning_input.toPlainText().splitlines() if m.strip()]
             entry["example"] = example_input.toPlainText().strip()
             
-            self.main_window.save_data() # 변경사항 저장
+            self.main_window.data_manager.save_data() # 변경사항 저장
             dialog.accept() # 다이얼로그 닫기
             self.load_words() # 목록 새로고침
 

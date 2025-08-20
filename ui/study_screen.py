@@ -12,11 +12,11 @@ class StudyScreen(QWidget):
 
         self.mode = None
         self.word_list_for_review = []
+        self.actually_studied_words = []
         self.incorrectly_answered_words = [] 
         self.is_reviewing_mistakes = False 
         self.current_word = None
         self.session_correct = 0
-        self.session_word_count = 0
         self.session_incorrect = 0
 
         # --- UI 위젯 초기화 ---
@@ -51,10 +51,12 @@ class StudyScreen(QWidget):
         self.mode = mode
         self.is_reviewing_mistakes = False
         self.incorrectly_answered_words = []
-        self.session_correct = 0; self.session_incorrect = 0
+        self.session_correct = 0
+        self.session_incorrect = 0
+        self.actually_studied_words = []
         
         deck_name = self.main_window.current_deck
-        all_words_in_deck = self.main_window.app_data["decks"][deck_name]["words"]
+        all_words_in_deck = self.main_window.data_manager.app_data["decks"][deck_name]["words"]
         
         now = datetime.now()
         self.word_list_for_review = [
@@ -63,22 +65,22 @@ class StudyScreen(QWidget):
                datetime.strptime(w['review_stats'][self.mode]['next_review'], "%Y-%m-%d %H:%M") <= now
         ]
         
-        self.session_word_count = len(self.word_list_for_review)
+        self.initial_review_list = list(self.word_list_for_review)
 
         if not self.word_list_for_review:
             return False
-
+        
         random.shuffle(self.word_list_for_review) # 단어 순서 섞기
-        self.next_question()
+        self.next_question()        
         return True
     
     def next_question(self):
         if not self.word_list_for_review:
-            # 틀린 단어 다시 풀기
             self.prompt_for_mistake_review()
             return
             
         self.current_word = self.word_list_for_review.pop()
+        #self.actually_studied_words.append(self.current_word)
 
         stats = self.current_word['review_stats'][self.mode]
         total_reviews = stats['correct_cnt'] + stats['incorrect_cnt']
@@ -96,8 +98,6 @@ class StudyScreen(QWidget):
         self.subjective_widget.hide()
         self._clear_objective_buttons()
 
-        # 객관식 문제 생성
-        # 질문 설정
         if self.mode == 'study_to_native':
             question_text = self.current_word['word']
         else:
@@ -121,6 +121,7 @@ class StudyScreen(QWidget):
         self.subjective_widget.show()
         self.objective_widget.hide()
         self.answer_input.clear()
+        self.answer_input.setFocus()
 
         # 질문 설정
         if self.mode == 'study_to_native':
@@ -164,13 +165,19 @@ class StudyScreen(QWidget):
             self.process_answer_result(is_correct)
     
     def process_answer_result(self, is_correct, was_close=False, suggestion=""):
+        if self.current_word not in self.actually_studied_words:
+            self.actually_studied_words.append(self.current_word)
+        
         # 피드백 메시지 생성
         if is_correct:
+            self.session_correct += 1
             message = "정답입니다! 🎉"
-        elif was_close:
-            message = f"아깝네요! 혹시 '{suggestion}'을(를) 입력하려고 하셨나요?"
         else:
-            message = "오답입니다."
+            self.session_incorrect += 1 
+            if was_close:
+                message = f"아깝네요! 혹시 '{suggestion}'을(를) 입력하려고 하셨나요?"
+            else:
+                message = "오답입니다."
         
         # 주관식의 경우 항상 모든 뜻 보여주기 (객관식 포함)
         all_meanings = ", ".join(self.current_word['meaning'])
@@ -183,15 +190,11 @@ class StudyScreen(QWidget):
         if not is_correct and not self.is_reviewing_mistakes:
              self.incorrectly_answered_words.append(self.current_word)
         
-        if is_correct: self.session_correct += 1
-        else: self.session_incorrect += 1
-
         stats = self.current_word['review_stats'][self.mode]
         stats['correct_cnt'] += 1 if is_correct else 0
         stats['incorrect_cnt'] += 1 if not is_correct else 0
         stats['last_reviewed'] = datetime.now().strftime("%Y-%m-%d %H:%M")
         
-        # 복습 주기 계산 (간단한 로직)
         corrects = stats['correct_cnt']
         incorrects = stats['incorrect_cnt']
         if is_correct:
@@ -200,7 +203,7 @@ class StudyScreen(QWidget):
             after_min = 30
         stats['next_review'] = (datetime.now() + timedelta(minutes=after_min)).strftime('%Y-%m-%d %H:%M')
 
-        self.main_window.save_data()
+        self.main_window.data_manager.save_data()
         self.next_question()
 
     def prompt_for_mistake_review(self):
@@ -225,7 +228,7 @@ class StudyScreen(QWidget):
         deck_name = self.main_window.current_deck
         if not deck_name: return
 
-        deck_data = self.main_window.app_data["decks"][deck_name]
+        deck_data = self.main_window.data_manager.app_data["decks"][deck_name]
         
         if "study_log" not in deck_data:
             deck_data["study_log"] = {}
@@ -238,21 +241,26 @@ class StudyScreen(QWidget):
                 "studied_word_count": 0,
                 "correct_count": 0,
                 "incorrect_count": 0,
-                "study_minutes": 0 # 분 단위 기록은 단순화를 위해 일단 제외
+                "studied_words_today": [] # 분 단위 기록은 단순화를 위해 일단 제외
             }
         
         # 로그 업데이트
         today_log = deck_data["study_log"][today_str]
+
+        if "studied_words_today" not in today_log:
+            today_log["studied_words_today"] = []
+
+        if not self.is_reviewing_mistakes:
+            for word_obj in self.actually_studied_words:
+                word = word_obj['word']
+                if word not in today_log["studied_words_today"]:
+                    today_log["studied_words_today"].append(word)
+
         today_log["correct_count"] += self.session_correct
         today_log["incorrect_count"] += self.session_incorrect
-        
-        # 학습한 단어 수 = 맞은 개수 + 틀린 개수 (오답노트 제외)
-        if not self.is_reviewing_mistakes:
-            today_log["studied_word_count"] += (self.session_correct + self.session_incorrect)
+        today_log["studied_word_count"] = len(today_log["studied_words_today"])
 
-        today_log["studied_word_count"] += self.session_word_count
-
-        self.main_window.save_data() # 변경사항 저장
+        self.main_window.data_manager.save_data() # 변경사항 저장
         self.main_window.go_to_home_screen()
     
     def _clear_objective_buttons(self):
@@ -263,7 +271,7 @@ class StudyScreen(QWidget):
 
     def _get_distractors(self, correct_answers):
         # 전체 덱에서 오답 보기를 추출하는 로직
-        all_words_in_deck = self.main_window.app_data["decks"][self.main_window.current_deck]["words"]
+        all_words_in_deck = self.main_window.data_manager.app_data["decks"][self.main_window.current_deck]["words"]
         
         if self.mode == 'study_to_native':
             distractor_pool = [m for w in all_words_in_deck for m in w['meaning'] if w != self.current_word]
@@ -274,8 +282,3 @@ class StudyScreen(QWidget):
         distractor_pool = list(set(distractor_pool) - set(correct_answers))
         
         return random.sample(distractor_pool, min(len(distractor_pool), 3))
-    
-    def clear_answer_widgets(self):
-        # 레이아웃에서 답변 관련 위젯들 숨기기
-        self.answer_input.hide()
-        self.submit_button.hide()

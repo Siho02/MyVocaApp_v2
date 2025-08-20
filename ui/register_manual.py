@@ -55,7 +55,7 @@ class RegisterManualScreen(QWidget):
             QMessageBox.critical(self, "오류", "선택된 덱이 없습니다.")
             return
             
-        word_list = self.main_window.app_data["decks"][deck_name]["words"]
+        word_list = self.main_window.data_manager.app_data["decks"][deck_name]["words"]
         existing_word_entry = next((item for item in word_list if item["word"] == word), None)
 
         message = ""
@@ -82,7 +82,7 @@ class RegisterManualScreen(QWidget):
             word_list.append(new_word_data)
             message = f"새로운 단어 '{word}'를 등록했습니다."
         
-        self.main_window.save_data() # MainWindow를 통해 데이터 저장
+        self.main_window.data_manager.save_data() # MainWindow를 통해 데이터 저장
         QMessageBox.information(self, "등록 결과", message)
         
         self.word_input.clear()

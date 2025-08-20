@@ -149,39 +149,50 @@ class MainWindow(QMainWindow):
 
     def handle_deck_deletion(self, deck_name):
         decks = self.data_manager.app_data['decks']
-        if deck_name in self.data_manager.app_data["decks"]:
+        if deck_name in self.app_data["decks"]:
             del decks[deck_name]
             self.data_manager.save_data()
             self.deck_selection_screen.update_deck_list(list(decks.keys()))
 
 
 if __name__ == "__main__":
+    from PyQt5.QtGui import QFontDatabase 
     import sys, os
     from PyQt5.QtWidgets import QApplication
-    from PyQt5.QtGui import QFontDatabase, QFont 
 
     app = QApplication(sys.argv)
 
-    font_file_name = 'NotoSansKR-SemiBold.ttf'
-    #font_file_name = 'KoPubWorld Dotum_Pro Bold.otf'
-    
+    font_file_name = 'HMKMMAG.ttf'
     font_path = os.path.join(os.path.dirname(__file__), "resources", "fonts", font_file_name)
     
+    print('-' * 30)
+    print(f"EXECUTING FILE: {__file__}") # 현재 실행 중인 파일 이름 출력
+    print(f"1. Attempting to load font from: {font_path}")
+
     font_id = QFontDatabase.addApplicationFont(font_path)
     font_family = "Malgun Gothic"
     
-    if font_id >= 0:
-        families = QFontDatabase.applicationFontFamilies(font_id)
-        if families:
-            font_family = families[0]
+    if font_id < 0:
+        print("2. FAILED to load font. Please check the file path and integrity.")
+    else:
+        print("2. SUCCESS: Font loaded into the application.")
+        font_families = QFontDatabase.applicationFontFamilies(font_id)
+        if font_families:
+            font_family = font_families[0]
+            print(f"3. Detected Font Family Name: '{font_family}'")
+        else:
+            print("3. FAILED: Could not retrieve font family name.")
 
-    default_font = QFont(font_family, 10) # 폰트 이름과 기본 크기(10pt) 설정
-    app.setFont(default_font)
+    print(f"4. Applying stylesheet with font-family: '{font_family}'")
+    print("-" * 30)
+
 
     DARK_STYLE = """
     QWidget {
         background-color: #2E3440; 
         color: #ECEFF4;
+        font-family: {font_family};
+        font-size: 11pt;
     }
     QPushButton {
         background-color: #4C566A;

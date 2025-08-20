@@ -36,7 +36,7 @@ class RegisterCSVScreen(QWidget):
                 reader = csv.DictReader(csvfile)
                 new_words_from_csv = list(reader)
 
-            word_list_in_deck = self.main_window.app_data["decks"][deck_name]["words"]
+            word_list_in_deck = self.main_window.data_manager.app_data["decks"][deck_name]["words"]
             existing_words_dict = {w['word']: w for w in word_list_in_deck}
             
             added_count = 0
@@ -73,7 +73,7 @@ class RegisterCSVScreen(QWidget):
                     word_list_in_deck.append(new_word_data)
                     added_count += 1
 
-            self.main_window.save_data()
+            self.main_window.data_manager.save_data()
 
             QMessageBox.information(
                 self, "등록 결과",

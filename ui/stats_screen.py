@@ -114,7 +114,7 @@ class StatsScreen(QWidget):
 
     def load_stats_data(self):
         """모든 덱의 로그를 읽어와 종합 통계를 계산하는 함수"""
-        all_decks = self.main_window.app_data.get("decks", {})
+        all_decks = self.main_window.data_manager.app_data.get("decks", {})
         
         # 통계 데이터 초기화
         total_words, total_correct, total_incorrect = 0, 0, 0
