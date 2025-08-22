@@ -1,6 +1,4 @@
-import sys
-import json
-import os
+import sys, json, os, pyttsx3, pykakasi
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QStackedWidget, QWidget, 
                              QVBoxLayout, QHBoxLayout, QPushButton, QMessageBox)
 from PyQt5.QtCore import Qt
@@ -19,12 +17,26 @@ from ui.settings_screen import SettingsScreen
 
 DATA_FILE = "data/app_data.json"
 
+LANGUAGE_MAP = {
+    "English": "en",
+    "German": "de",
+    "한국어": "ko",
+    "日本語": "ja",
+    "Française": "fr",
+    "Castellano": "es", 
+    "Русский": "ru", 
+}
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        # ... (이전과 동일한 초기화 코드)
         self.setWindowTitle("My Voca App")
         self.setGeometry(100, 100, 400, 600)
+        self.kks = pykakasi.kakasi()
+        try: self.voice_map = self.map_available_voices() 
+        except Exception as e:
+            print(f"TTS engine initailization failed: {e}")
+            self.tts_engine = None
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -156,7 +168,57 @@ class MainWindow(QMainWindow):
         self.data_manager.delete_deck(deck_name)
         deck_names = self.data_manager.get_deck_names()
         self.deck_selection_screen.update_deck_list(deck_names)
-        
+    
+    def map_available_voices(self):
+        voice_map = {}
+        print("--- [TTS Voice Engine Debug] ---")
+        print("Searching for available voices on your system...")
+        try:
+            temp_engine = pyttsx3.init()
+            voices = temp_engine.getProperty('voices')
+            print(f"Found {len(voices)} voices in total:")
+
+            for i, voice in enumerate(voices):
+                print(f"  - Voice #{i}: Name: {voice.name}, Langs: {getattr(voice, 'languages', [])}")
+                lang_codes = getattr(voice, 'languages', [])
+                if lang_codes:
+                    short_code = lang_codes[0].replace('-', '_').split('_')[0]
+                    
+                    if short_code not in voice_map:
+                        voice_map[short_code] = voice.id
+            
+            del temp_engine
+            print("\nSuccessfully created voice map:")
+            print(voice_map)
+            print("------------------------------------")
+            return voice_map
+        except Exception as e:
+            print(f"TTS voice mapping failed: {e}")
+            print("------------------------------------")
+            return {}
+
+    def speak(self, text, lang=""):
+        try:
+            engine = pyttsx3.init()            
+            lang_code = LANGUAGE_MAP.get(lang)
+            
+            if lang_code == 'ja' and text:
+                result = self.kks.convert(text) # 예: '酒' -> [{'orig': '酒', 'hira': 'さけ', ...}]
+                # 변환된 결과에서 히라가나 부분만 추출
+                hiragana_text = "".join([item['hira'] for item in result])
+                print(f"Japanese Kanji to Hiragana: '{text}' -> '{hiragana_text}'") # 디버깅용 출력
+                text = hiragana_text
+
+            if lang_code and lang_code in self.voice_map:
+                engine.setProperty('voice', self.voice_map[lang_code])
+            
+            engine.say(text)
+            engine.runAndWait()
+            engine.stop()
+        except Exception as e:
+            print(f"TTS failed during speak: {e}")
+
+
 if __name__ == "__main__":
     import sys, os
     from PyQt5.QtWidgets import QApplication

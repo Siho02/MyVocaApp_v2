@@ -19,11 +19,22 @@ class StudyScreen(QWidget):
         self.session_correct = 0
         self.session_incorrect = 0
 
+        self.current_question_text = ""
+        self.current_question_lang = ""
+
         # --- UI 위젯 초기화 ---
         self.layout = QVBoxLayout(self)
+
+        question_layout = QHBoxLayout()
         self.question_label = QLabel("질문이 여기에 표시됩니다.")
 
-        # --- 주관식용 위젯 
+        self.speak_button = QPushButton("🔊")
+        self.speak_button.setFixedSize(40, 40) # 버튼 크기 고정
+        self.speak_button.clicked.connect(self.speak_current_word)
+        
+        question_layout.addWidget(self.question_label)
+        question_layout.addWidget(self.speak_button)
+
         self.subjective_widget = QWidget()
         subjective_layout = QHBoxLayout(self.subjective_widget)
         self.answer_input = QLineEdit()
@@ -34,10 +45,9 @@ class StudyScreen(QWidget):
         # ---객관식용 위젯
         self.objective_widget = QWidget()
         self.objective_layout = QVBoxLayout(self.objective_widget)
-
         self.finish_button = QPushButton("학습 종료")
 
-        self.layout.addWidget(self.question_label)
+        self.layout.addLayout(question_layout)
         self.layout.addWidget(self.subjective_widget)
         self.layout.addWidget(self.objective_widget)
         self.layout.addStretch(1)
@@ -80,8 +90,6 @@ class StudyScreen(QWidget):
             return
             
         self.current_word = self.word_list_for_review.pop()
-        #self.actually_studied_words.append(self.current_word)
-
         stats = self.current_word['review_stats'][self.mode]
         total_reviews = stats['correct_cnt'] + stats['incorrect_cnt']
         accuracy = 0
@@ -98,19 +106,23 @@ class StudyScreen(QWidget):
         self.subjective_widget.hide()
         self._clear_objective_buttons()
 
-        if self.mode == 'study_to_native':
-            question_text = self.current_word['word']
-        else:
-            question_text = random.choice(self.current_word['meaning'])
-        self.question_label.setText(f"'{question_text}'의 뜻으로 올바른 것은?")
+        deck_settings = self.main_window.data_manager.get_deck_settings(self.main_window.current_deck)
 
-        # 보기 생성
+        if self.mode == 'study_to_native':
+            self.current_question_text = self.current_word['word']
+            self.current_question_lang = deck_settings.get("study_lang")
+            prompt_text = f"'{self.current_question_text}'의 뜻으로 올바른 것은?"
+        else:
+            self.current_question_text = random.choice(self.current_word['meaning'])
+            self.current_question_lang = deck_settings.get("native_lang")
+            prompt_text = f"'{self.current_question_text}'에 해당하는 단어는?"
+
+        self.question_label.setText(prompt_text)
+        
         correct_answers = self.current_word['meaning'] if self.mode == 'study_to_native' else [self.current_word['word']]
         choices = self._get_distractors(correct_answers)
         choices.append(random.choice(correct_answers))
         random.shuffle(choices)
-
-        # 버튼 생성
         for choice in choices:
             btn = QPushButton(choice)
             btn.clicked.connect(lambda _, c=choice: self.check_objective_answer(c))
@@ -123,14 +135,18 @@ class StudyScreen(QWidget):
         self.answer_input.clear()
         self.answer_input.setFocus()
 
-        # 질문 설정
+        deck_settings = self.main_window.data_manager.get_deck_settings(self.main_window.current_deck)
+        
         if self.mode == 'study_to_native':
-            question_text = self.current_word['word']
+            self.current_question_text = self.current_word['word']
+            self.current_question_lang = deck_settings.get("study_lang")
             prompt = "의 뜻을 입력하세요."
         else:
-            question_text = random.choice(self.current_word['meaning'])
+            self.current_question_text = random.choice(self.current_word['meaning'])
+            self.current_question_lang = deck_settings.get("native_lang")
             prompt = "에 해당하는 단어를 입력하세요."
-        self.question_label.setText(f"'{question_text}' {prompt}")
+
+        self.question_label.setText(f"'{self.current_question_text}' {prompt}")
 
     def check_objective_answer(self, chosen_answer):
         correct_answers = self.current_word['meaning'] if self.mode == 'study_to_native' else [self.current_word['word']]
@@ -262,6 +278,10 @@ class StudyScreen(QWidget):
 
         self.main_window.data_manager.save_data() # 변경사항 저장
         self.main_window.go_to_home_screen()
+    
+    def speak_current_word(self):
+        if self.current_question_text and self.current_question_lang:
+            self.main_window.speak(self.current_question_text, self.current_question_lang)
     
     def _clear_objective_buttons(self):
         while self.objective_layout.count():
