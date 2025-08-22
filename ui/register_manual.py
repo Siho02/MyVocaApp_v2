@@ -55,7 +55,7 @@ class RegisterManualScreen(QWidget):
             QMessageBox.critical(self, "오류", "선택된 덱이 없습니다.")
             return
             
-        word_list = self.main_window.data_manager.app_data["decks"][deck_name]["words"]
+        word_list = self.main_window.data_manager.get_words_for_deck(deck_name)
         existing_word_entry = next((item for item in word_list if item["word"] == word), None)
 
         message = ""

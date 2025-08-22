@@ -20,9 +20,9 @@ class ContributionGraph(QWidget):
 
     def get_color(self, count):
         if count == 0: return "#EAECEE"
-        elif 1 <= count < 5: return "#A3E4D7"
-        elif 5 <= count < 10: return "#76D7C4"
-        elif 10 <= count < 20: return "#48C9B0"
+        elif 1 <= count < 10: return "#A3E4D7"
+        elif 10 <= count < 30: return "#76D7C4"
+        elif 30 <= count < 50: return "#48C9B0"
         else: return "#1ABC9C"
 
     def set_data(self, log_data):
@@ -79,59 +79,56 @@ class StatsScreen(QWidget):
 
         self.layout = QVBoxLayout(self)
 
-        self.stats_summary_group = QGroupBox("전체 통계")
-        summary_layout = QVBoxLayout()
+        self.title_label = QLabel("전체 통계")
+        self.title_label.setObjectName("titleLabel")
+        self.layout.addWidget(self.title_label)
+
+        summary_layout = QHBoxLayout()
         self.total_words_label = QLabel("총 학습 단어: 0개")
-        self.total_time_label = QLabel("총 학습 시간: 0시간 0분")
         self.total_accuracy_label = QLabel("전체 정답률: 0.00%")
         summary_layout.addWidget(self.total_words_label)
-        summary_layout.addWidget(self.total_time_label)
         summary_layout.addWidget(self.total_accuracy_label)
-        self.stats_summary_group.setLayout(summary_layout)
+        self.layout.addLayout(summary_layout)
 
         self.contribution_graph = ContributionGraph()
+        self.layout.addWidget(self.contribution_graph)
         
         self.daily_detail_group = QGroupBox("일일 상세 정보")
         detail_layout = QVBoxLayout()
         self.detail_date_label = QLabel("날짜: -")
         self.detail_words_label = QLabel("학습 단어: -")
-        self.detail_time_label = QLabel("학습 시간: -")
         self.detail_accuracy_label = QLabel("정답률: -")
         detail_layout.addWidget(self.detail_date_label)
         detail_layout.addWidget(self.detail_words_label)
-        detail_layout.addWidget(self.detail_time_label)
         detail_layout.addWidget(self.detail_accuracy_label)
+        
         self.daily_detail_group.setLayout(detail_layout)
         self.daily_detail_group.hide()
-
-        self.layout.addWidget(self.stats_summary_group)
-        self.layout.addWidget(self.contribution_graph)
         self.layout.addStretch()
         self.layout.addWidget(self.daily_detail_group)
-        
         self.contribution_graph.day_clicked.connect(self.on_day_clicked)
-        self.load_stats_data()
 
-    def load_stats_data(self):
-        """모든 덱의 로그를 읽어와 종합 통계를 계산하는 함수"""
-        all_decks = self.main_window.data_manager.app_data.get("decks", {})
+    def load_stats_data(self, deck_name=None):
+        if deck_name: # 특정 덱의 통계를 볼 경우
+            self.title_label.setText(f"'{deck_name}' 덱 통계")
+            decks_to_process = {deck_name: self.main_window.data_manager.app_data["decks"][deck_name]}
+        else: # 전체 통계를 볼 경우
+            self.title_label.setText("전체 통계")
+            decks_to_process = self.main_window.data_manager.app_data.get("decks", {})
         
-        # 통계 데이터 초기화
         total_words, total_correct, total_incorrect = 0, 0, 0
         self.log_data_by_date = {}
 
         # 모든 덱을 순회하며 로그를 합산
-        for deck_data in all_decks.values():
+        for deck_data in decks_to_process.values():
             log_data = deck_data.get("study_log", {})
             for date, daily_log in log_data.items():
-                # 날짜별 데이터 집계 (그래프 및 상세 정보용)
                 if date not in self.log_data_by_date:
                     self.log_data_by_date[date] = {"studied_word_count": 0, "correct_count": 0, "incorrect_count": 0}
-                
                 self.log_data_by_date[date]["studied_word_count"] += daily_log.get("studied_word_count", 0)
                 self.log_data_by_date[date]["correct_count"] += daily_log.get("correct_count", 0)
                 self.log_data_by_date[date]["incorrect_count"] += daily_log.get("incorrect_count", 0)
-
+                
         # 합산된 데이터를 기반으로 전체 통계 계산
         for daily_summary in self.log_data_by_date.values():
             total_words += daily_summary["studied_word_count"]
@@ -142,9 +139,9 @@ class StatsScreen(QWidget):
         self.total_words_label.setText(f"총 학습 단어: {total_words}개")
         if (total_correct + total_incorrect) > 0:
             accuracy = (total_correct / (total_correct + total_incorrect)) * 100
-            self.total_accuracy_label.setText(f"전체 정답률: {accuracy:.2f}%")
+            self.total_accuracy_label.setText(f"전체 정답률: {accuracy:.1f}%")
         else:
-            self.total_accuracy_label.setText("전체 정답률: 0.00%")
+            self.total_accuracy_label.setText("전체 정답률: 0.0%")
         
         # 그래프 데이터 설정
         self.contribution_graph.set_data(self.log_data_by_date)

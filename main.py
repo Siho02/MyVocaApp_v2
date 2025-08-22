@@ -4,6 +4,7 @@ import os
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QStackedWidget, QWidget, 
                              QVBoxLayout, QHBoxLayout, QPushButton, QMessageBox)
 from PyQt5.QtCore import Qt
+
 from data_manager import DataManager
 from ui.deck_selection_screen import DeckSelectionScreen
 from ui.language_setup_screen import LanguageSetupScreen
@@ -34,7 +35,7 @@ class MainWindow(QMainWindow):
 
         nav_bar = QHBoxLayout()
         btn_home = QPushButton("🏠 첫화면")
-        btn_stats = QPushButton("📊 통계")
+        btn_stats = QPushButton("📊 전체 통계")
         btn_settings = QPushButton("⚙️ 설정")
         
         nav_bar.addWidget(btn_home)
@@ -59,7 +60,8 @@ class MainWindow(QMainWindow):
             switch_to_register_callback=self.open_manual_register,
             switch_to_csv_callback=self.open_csv_register,
             switch_to_wordlist_callback=self.open_word_list,
-            switch_to_study_mode_callback=self.open_study_mode_select # [수정]
+            switch_to_study_mode_callback=self.open_study_mode_select,
+            switch_to_deck_stats_callback=self.open_deck_stats
         )
 
         # --- 화면 스택에 추가 ---
@@ -89,8 +91,12 @@ class MainWindow(QMainWindow):
         self.show()
 
     # --- 화면 열기 함수들 ---
-    def open_manual_register(self): self.stack.setCurrentWidget(self.register_manual_screen)
-    def open_csv_register(self): self.stack.setCurrentWidget(self.register_csv_screen)
+    def open_manual_register(self): 
+        self.stack.setCurrentWidget(self.register_manual_screen)
+    
+    def open_csv_register(self): 
+        self.stack.setCurrentWidget(self.register_csv_screen)
+    
     def open_word_list(self): 
         self.word_list_screen.load_words() 
         self.stack.setCurrentWidget(self.word_list_screen)
@@ -105,14 +111,18 @@ class MainWindow(QMainWindow):
     def start_study(self, mode):
         can_start = self.study_screen.start_new_study_session(mode) 
         if can_start:
-            # 시작 가능할 때만 화면 전환
             self.stack.setCurrentWidget(self.study_screen)
         else:
-            # 시작 불가능하면 메시지만 표시하고 화면은 전환하지 않음
             QMessageBox.information(self, "완료", "오늘 복습할 단어가 없습니다!")
-         
+
+    def open_deck_stats(self):
+        if self.current_deck:
+            self.stats_screen.load_stats_data(deck_name=self.current_deck)
+            self.stack.setCurrentWidget(self.stats_screen)
+
     def go_to_home_screen(self):
-        if self.current_deck: self.home_screen.set_deck_name(self.current_deck)
+        if self.current_deck: 
+            self.home_screen.set_deck_name(self.current_deck)
         self.stack.setCurrentWidget(self.home_screen)
 
     def go_to_settings_screen(self): 
@@ -130,9 +140,7 @@ class MainWindow(QMainWindow):
     def handle_deck_selection(self, deck_name, is_new):
         decks = self.data_manager.app_data['decks']
         if is_new:
-            if deck_name not in decks:
-                decks[deck_name] = {'settings' : {}, 'words' : []}
-                self.data_manager.save_data()
+            if self.data_manager.add_deck(deck_name):
                 self.language_setup_screen.set_deck_name(deck_name)
                 self.stack.setCurrentWidget(self.language_setup_screen)
         else:
@@ -140,21 +148,15 @@ class MainWindow(QMainWindow):
             self.go_to_home_screen()
 
     def handle_setup_complete(self, deck_name, native_lang, study_lang):
-        settings = self.data_manager.app_data["decks"][deck_name]["settings"]
-        settings["native_lang"] = native_lang
-        settings["study_lang"] = study_lang
-        self.data_manager.save_data()
+        self.data_manager.update_deck_settings(deck_name, native_lang, study_lang)
         self.current_deck = deck_name
         self.go_to_home_screen()
 
     def handle_deck_deletion(self, deck_name):
-        decks = self.data_manager.app_data['decks']
-        if deck_name in self.data_manager.app_data["decks"]:
-            del decks[deck_name]
-            self.data_manager.save_data()
-            self.deck_selection_screen.update_deck_list(list(decks.keys()))
-
-
+        self.data_manager.delete_deck(deck_name)
+        deck_names = self.data_manager.get_deck_names()
+        self.deck_selection_screen.update_deck_list(deck_names)
+        
 if __name__ == "__main__":
     import sys, os
     from PyQt5.QtWidgets import QApplication

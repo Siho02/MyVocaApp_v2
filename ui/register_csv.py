@@ -36,7 +36,7 @@ class RegisterCSVScreen(QWidget):
                 reader = csv.DictReader(csvfile)
                 new_words_from_csv = list(reader)
 
-            word_list_in_deck = self.main_window.data_manager.app_data["decks"][deck_name]["words"]
+            word_list_in_deck = self.main_window.data_manager.get_words_for_deck(deck_name)
             existing_words_dict = {w['word']: w for w in word_list_in_deck}
             
             added_count = 0

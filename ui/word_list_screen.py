@@ -2,18 +2,24 @@ from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QListWidget, QPushButton,
     QMessageBox, QHBoxLayout, QDialog, QLineEdit, QTextEdit
 )
+from PyQt5.QtCore import Qt
 
 class WordListScreen(QWidget):
     def __init__(self, main_window):
         super().__init__()
         self.main_window = main_window
-        self.word_data = [] # 현재 덱의 단어 목록을 저장할 변수
+        self.all_words_in_deck = [] # 현재 덱의 단어 목록을 저장할 변수
 
         self.layout = QVBoxLayout(self)
 
         self.title = QLabel("📖 저장된 단어 목록")
         self.title.setStyleSheet("font-size: 20px; font-weight: bold;")
         self.layout.addWidget(self.title)
+
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText("검색할 단어 또는 뜻을 입력하세요...")
+        self.search_input.textChanged.connect(self.filter_words) # 텍스트가 변경될 때마다 filter_words 함수 호출
+        self.layout.addWidget(self.search_input)
 
         self.word_list_widget = QListWidget()
         self.layout.addWidget(self.word_list_widget)
@@ -49,11 +55,22 @@ class WordListScreen(QWidget):
             return
             
         self.title.setText(f"📖 '{deck_name}' 덱 단어 목록")
-        self.word_data = self.main_window.data_manager.app_data["decks"][deck_name]["words"]
+        self.all_words_in_deck = self.main_window.data_manager.get_words_for_deck(deck_name)
         
         self.word_list_widget.clear()
-        for entry in self.word_data:
-            self.word_list_widget.addItem(entry["word"])
+        self.filter_words() 
+        
+    def filter_words(self):
+        search_text = self.search_input.text().lower()
+        self.word_list_widget.clear()
+
+        for entry in self.all_words_in_deck:
+            word = entry.get("word", "").lower()
+            meanings = " ".join(entry.get("meaning", [])).lower()
+            
+            # 검색어가 비어있거나, 단어 또는 뜻에 포함되어 있으면 목록에 추가
+            if not search_text or search_text in word or search_text in meanings:
+                self.word_list_widget.addItem(entry["word"])
         
         self.detail_label.setText("단어를 선택하면 상세 정보가 표시됩니다.")
         self.delete_button.setEnabled(False)
@@ -66,8 +83,9 @@ class WordListScreen(QWidget):
             self.edit_button.setEnabled(False)
             return
 
-        index = self.word_list_widget.currentRow()
-        entry = self.word_data[index]
+        selected_word_text = selected_items[0].text()
+        entry = next((word for word in self.all_words_in_deck if word["word"] == selected_word_text), None)
+        if not entry: return
 
         word = entry.get("word", "")
         meanings = ", ".join(entry.get("meaning", []))
@@ -82,28 +100,37 @@ class WordListScreen(QWidget):
         self.edit_button.setEnabled(True)
 
     def delete_selected_word(self):
-        index = self.word_list_widget.currentRow()
-        word_to_delete = self.word_data[index]["word"]
+        selected_word_text = self.word_list_widget.currentItem().text()
 
-        confirm = QMessageBox.question(self, "삭제 확인", f"'{word_to_delete}' 단어를 정말 삭제하시겠습니까?")
+        word_to_delete_index = -1
+        for i, word in enumerate(self.all_words_in_deck):
+            if word["word"] == selected_word_text:
+                word_to_delete_index = i
+                break
+        if word_to_delete_index == -1: return
+        
+        confirm = QMessageBox.question(self, "삭제 확인", f"'{selected_word_text}' 단어를 정말 삭제하시겠습니까?")
         if confirm == QMessageBox.Yes:
-            del self.word_data[index] # self.word_data는 실제 app_data의 단어 리스트를 가리킴
-            self.main_window.data_manager.save_data() # 변경사항 저장
-            QMessageBox.information(self, "삭제 완료", f"'{word_to_delete}' 단어가 삭제되었습니다.")
-            self.load_words() # 목록 새로고침
+            del self.all_words_in_deck[word_to_delete_index]
+            self.main_window.data_manager.save_data()
+            QMessageBox.information(self, "삭제 완료", f"'{selected_word_text}' 단어가 삭제되었습니다.")
+            self.load_words()
 
     def edit_selected_word(self):
-        index = self.word_list_widget.currentRow()
-        entry = self.word_data[index]
+        if not self.word_list_widget.currentItem(): return
+        selected_word_text = self.word_list_widget.currentItem().text()
+
+        entry = next((word for word in self.all_words_in_deck if word["word"] == selected_word_text), None)
+        if not entry: return
 
         # --- 수정 다이얼로그 생성 ---
         dialog = QDialog(self)
         dialog.setWindowTitle(f"'{entry['word']}' 수정")
         dialog_layout = QVBoxLayout(dialog)
 
-        dialog_layout.addWidget(QLabel("뜻 (줄바꿈으로 구분):"))
+        dialog_layout.addWidget(QLabel("뜻 (세미콜론(;)으로 구분):"))
         meaning_input = QTextEdit()
-        meaning_input.setText("\n".join(entry.get("meaning", [])))
+        meaning_input.setText(";".join(entry.get("meaning", [])))
         dialog_layout.addWidget(meaning_input)
 
         dialog_layout.addWidget(QLabel("예문:"))

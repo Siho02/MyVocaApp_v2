@@ -32,3 +32,45 @@ class DataManager:
         """현재 데이터를 app_data.json 파일에 저장합니다."""
         with open(DATA_FILE, 'w', encoding='utf-8') as f:
             json.dump(self.app_data, f, ensure_ascii=False, indent=2)
+
+    def get_deck_names(self):
+        """모든 덱의 이름 목록을 반환합니다."""
+        return list(self.app_data.get("decks", {}).keys())
+
+    def add_deck(self, deck_name):
+        """새로운 덱을 추가합니다."""
+        if deck_name not in self.app_data["decks"]:
+            self.app_data["decks"][deck_name] = {"settings": {}, "words": [], "study_log": {}}
+            self.save_data()
+            return True
+        return False
+
+    def delete_deck(self, deck_name):
+        """기존 덱을 삭제합니다."""
+        if deck_name in self.app_data["decks"]:
+            del self.app_data["decks"][deck_name]
+            self.save_data()
+
+    def update_deck_settings(self, deck_name, native_lang, study_lang):
+        """덱의 언어 설정을 업데이트합니다."""
+        if deck_name in self.app_data["decks"]:
+            settings = self.app_data["decks"][deck_name]["settings"]
+            settings["native_lang"] = native_lang
+            settings["study_lang"] = study_lang
+            self.save_data()
+
+    def get_deck_settings(self, deck_name):
+        """특정 덱의 언어 설정을 반환합니다."""
+        return self.app_data["decks"].get(deck_name, {}).get("settings", {})
+
+    def get_words_for_deck(self, deck_name):
+        """특정 덱의 모든 단어 목록을 반환합니다."""
+        return self.app_data["decks"].get(deck_name, {}).get("words", [])
+
+    def get_study_log_for_deck(self, deck_name):
+        """특정 덱의 학습 기록을 반환합니다."""
+        return self.app_data["decks"].get(deck_name, {}).get("study_log", {})
+    
+    def get_all_decks_data(self):
+        """모든 덱의 데이터를 반환합니다."""
+        return self.app_data.get("decks", {})

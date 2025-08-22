@@ -56,7 +56,7 @@ class StudyScreen(QWidget):
         self.actually_studied_words = []
         
         deck_name = self.main_window.current_deck
-        all_words_in_deck = self.main_window.data_manager.app_data["decks"][deck_name]["words"]
+        all_words_in_deck = self.main_window.data_manager.get_words_for_deck(deck_name)
         
         now = datetime.now()
         self.word_list_for_review = [

@@ -2,13 +2,14 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayo
 from PyQt5.QtCore import Qt 
 
 class HomeScreen(QWidget):
-    def __init__(self, switch_to_register_callback, switch_to_csv_callback, switch_to_wordlist_callback, switch_to_study_mode_callback):
+    def __init__(self, switch_to_register_callback, switch_to_csv_callback, switch_to_wordlist_callback, switch_to_study_mode_callback, switch_to_deck_stats_callback):
         super().__init__()  
         self.switch_to_register_callback = switch_to_register_callback
         self.switch_to_csv_callback = switch_to_csv_callback
         self.switch_to_wordlist_callback = switch_to_wordlist_callback
         self.switch_to_study_mode_callback = switch_to_study_mode_callback
-        
+        self.switch_to_deck_stats_callback = switch_to_deck_stats_callback
+
         layout = QVBoxLayout()
 
         self.title = QLabel("") 
@@ -32,6 +33,11 @@ class HomeScreen(QWidget):
         study_button = QPushButton("🎯 단어 공부하러 가기")
         study_button.clicked.connect(self.switch_to_study_mode_callback)
         layout.addWidget(study_button)
+
+        # 덱별 통계 보기 버튼
+        deck_stats_button = QPushButton("📊 이 덱의 통계 보기")
+        deck_stats_button.clicked.connect(self.switch_to_deck_stats_callback)
+        layout.addWidget(deck_stats_button)
 
         layout.addStretch()
         self.setLayout(layout)
